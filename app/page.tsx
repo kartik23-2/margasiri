@@ -14,6 +14,7 @@ export default function HomePage() {
   const [tracking, setTracking] = useState(false);
   const [places, setPlaces] = useState<PlaceWithDistance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalPlaces, setTotalPlaces] = useState(1237);
 
   async function fetchPlaces(o?: { lat: number; lng: number } | null) {
     const params = new URLSearchParams();
@@ -23,6 +24,7 @@ export default function HomePage() {
     }
     const res = await fetch(`/api/places?${params.toString()}`);
     const data = await res.json();
+    setTotalPlaces(data.count);
     setPlaces(data.places.slice(0, 6));
     setLoading(false);
   }
@@ -60,7 +62,7 @@ export default function HomePage() {
         </h1>
         <p className="max-w-xl mx-auto opacity-80 mb-8 text-[15px] leading-relaxed">
           Verified hidden villages, valleys and heritage sites across India &mdash; sorted by real distance from
-          exactly where you're standing. English, Hindi, and Kannada.
+          exactly where you're standing. English, Hindi, and Kannada language modes.
         </p>
         <div className="flex gap-3 justify-center flex-wrap mb-10">
           <button
@@ -78,8 +80,8 @@ export default function HomePage() {
         </div>
         <div className="flex gap-4 justify-center flex-wrap">
           <div className="milestone px-5 py-2 min-w-[110px]">
-            <div className="font-mono font-semibold text-xl">51+</div>
-            <div className="text-[10px] uppercase tracking-widest opacity-70">Karnataka</div>
+            <div className="font-mono font-semibold text-xl">{totalPlaces}+</div>
+            <div className="text-[10px] uppercase tracking-widest opacity-70">India places</div>
           </div>
           <div className="milestone px-5 py-2 min-w-[110px]">
             <div className="font-mono font-semibold text-xl">28</div>
@@ -87,7 +89,7 @@ export default function HomePage() {
           </div>
           <div className="milestone px-5 py-2 min-w-[110px]">
             <div className="font-mono font-semibold text-xl">3</div>
-            <div className="text-[10px] uppercase tracking-widest opacity-70">languages</div>
+            <div className="text-[10px] uppercase tracking-widest opacity-70">language modes</div>
           </div>
         </div>
       </header>

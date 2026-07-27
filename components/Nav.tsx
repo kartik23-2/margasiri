@@ -11,7 +11,7 @@ export default function Nav() {
       </Link>
       <div className="hidden md:flex gap-6 text-sm font-medium opacity-75">
         <Link href="/explore" className="hover:opacity-100">Explore</Link>
-        <Link href="/state/karnataka" className="hover:opacity-100">Karnataka</Link>
+        <Link href="/explore" className="hover:opacity-100">India</Link>
       </div>
       <Link
         href="/explore"
