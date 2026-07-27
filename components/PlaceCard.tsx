@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import type { Place } from '@/lib/data/places';
-import { directionsUrl } from '@/lib/geo';
 
 interface Props {
   place: Place & { distanceKm?: number | null };
@@ -33,14 +32,12 @@ export default function PlaceCard({ place, origin }: Props) {
         <p className="text-xs text-black/60 -mt-1">{place.district} District, {place.state}</p>
         <p className="text-[13px] leading-relaxed opacity-85 flex-1">{place.description}</p>
         <div className="flex gap-2 mt-2">
-          <a
-            href={directionsUrl({ lat: place.lat, lng: place.lng }, origin)}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href={`/place/${place.slug}#directions`}
             className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-indigo text-paper-light"
           >
-            Get directions
-          </a>
+            Directions
+          </Link>
           <Link
             href={`/place/${place.slug}`}
             className="flex-1 text-center text-xs font-semibold py-2 rounded-lg border border-indigo text-indigo"

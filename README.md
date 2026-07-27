@@ -2,7 +2,7 @@
 
 India's hidden villages, valleys and heritage sites — sorted by live distance from you. English, Hindi, Kannada.
 
-This is the real application, not a mockup: a working Next.js 14 (App Router) + TypeScript + Tailwind codebase, with a Prisma schema ready for PostgreSQL/PostGIS. It builds and runs today on static seed data (51 verified Karnataka places + 33 seeded across other states), and is structured so swapping in a live database is a small change, not a rewrite.
+This is the real application, not a mockup: a working Next.js 14 (App Router) + TypeScript + Tailwind codebase, with a Prisma schema ready for PostgreSQL/PostGIS. It builds and runs today on static seed data (304 verified Karnataka places + 81 verified Telangana places + 43 verified Maharashtra places + 44 verified Tamil Nadu places + 9 verified Andhra Pradesh places + 34 verified Arunachal Pradesh places + 33 verified Delhi places + 22 seeded across other states), and is structured so swapping in a live database is a small change, not a rewrite.
 
 ## Quick start
 
@@ -16,7 +16,7 @@ Open http://localhost:3000. Home page, `/explore`, individual `/place/[slug]` pa
 ## What's real vs. what's next
 
 **Working right now:**
-- Full Next.js app, builds clean (`npm run build` — verified, 108 static pages pre-rendered for SEO)
+- Full Next.js app, builds clean (`npm run build` — verified, with static pages pre-rendered for SEO)
 - Live geolocation + real Haversine distance calculation, both client-side and via `/api/places`
 - Search, state filter, category filter on `/explore`
 - Individual SEO-ready pages for every place and every state (this is the SEO growth engine from the roadmap doc)
@@ -53,7 +53,7 @@ components/
   Nav.tsx
   PlaceCard.tsx           Core reusable card, used on home/explore/state pages
 lib/
-  data/places.ts          Current data source — 84 places, typed, ready to seed a DB from
+  data/places.ts          Current data source — 575 places, typed, ready to seed a DB from
   geo.ts                  Haversine distance + Google Maps directions URL builder
   i18n.ts                 EN/HI/KN dictionary (UI strings — see note below)
 prisma/
@@ -63,7 +63,7 @@ prisma/
 ## Language status
 
 - UI dictionary (`lib/i18n.ts`) has English, Hindi, and Kannada strings, but **is not yet wired into the pages** — pages are English-only right now. Next step: a language context/provider and swapping hardcoded strings for `t(lang, 'key')` calls.
-- Place descriptions are English-only. The Prisma schema already has a `PlaceTranslation` model (one row per place per language) ready for this — translating the 51 Karnataka descriptions into Hindi and Kannada is the next real content task, not a technical blocker.
+- Place descriptions are English-only. The Prisma schema already has a `PlaceTranslation` model (one row per place per language) ready for this — translating the 304 Karnataka descriptions into Hindi and Kannada is the next real content task, not a technical blocker.
 
 ## Known gaps (intentionally not built yet)
 
