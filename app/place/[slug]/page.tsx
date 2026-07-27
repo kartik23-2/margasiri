@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import InAppDirections from '@/components/InAppDirections';
 import { PLACES, getPlaceBySlug } from '@/lib/data/places';
+import { externalDirectionsUrl } from '@/lib/geo';
 import { getPlaceDetails } from '@/lib/placeDetails';
 
 export function generateStaticParams() {
@@ -22,6 +24,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
 
   const img = `https://picsum.photos/seed/${place.slug}/1200/700`;
   const details = getPlaceDetails(place);
+  const externalMapUrl = externalDirectionsUrl({ lat: place.lat, lng: place.lng });
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-10">
@@ -46,12 +49,28 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
               </span>
             ))}
           </div>
-          <a
-            href="#directions"
-            className="inline-block bg-indigo text-paper-light px-6 py-3 rounded-lg font-semibold text-sm"
-          >
-            Open directions
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/journey/${place.slug}`}
+              className="inline-block bg-vermillion text-paper-light px-6 py-3 rounded-lg font-semibold text-sm"
+            >
+              Start Journey
+            </Link>
+            <a
+              href={externalMapUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block border border-black/15 bg-paper-light px-6 py-3 rounded-lg font-semibold text-sm"
+            >
+              Open in Google Maps
+            </a>
+            <a
+              href="#directions"
+              className="inline-block border border-black/15 px-6 py-3 rounded-lg font-semibold text-sm"
+            >
+              Preview route
+            </a>
+          </div>
         </div>
       </section>
 

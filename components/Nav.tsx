@@ -1,6 +1,13 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Nav() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith('/journey/')) return null;
+
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-paper/90 backdrop-blur border-b border-black/10">
       <Link href="/" className="flex items-center gap-2 font-display text-xl">

@@ -36,3 +36,8 @@ export function directionsEmbedUrl(dest: Coords, origin: Coords | null, mode: 'd
   const daddr = encodeURIComponent(`${dest.lat},${dest.lng}`);
   return `https://maps.google.com/maps?saddr=${saddr}&daddr=${daddr}&dirflg=${flags[mode]}&output=embed`;
 }
+
+export function externalDirectionsUrl(dest: Coords): string {
+  const destination = encodeURIComponent(`${dest.lat},${dest.lng}`);
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+}
