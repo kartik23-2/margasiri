@@ -2,7 +2,7 @@
 
 India's hidden villages, valleys and heritage sites — sorted by live distance from you. English, Hindi, Kannada.
 
-This is the real application, not a mockup: a working Next.js 14 (App Router) + TypeScript + Tailwind codebase, with a Prisma schema ready for PostgreSQL/PostGIS. It builds and runs today on static seed data (304 verified Karnataka places + 81 verified Telangana places + 43 verified Maharashtra places + 44 verified Tamil Nadu places + 9 verified Andhra Pradesh places + 34 verified Arunachal Pradesh places + 33 verified Delhi places + 33 verified Kerala places + 67 verified Madhya Pradesh places + 33 verified West Bengal places + 22 seeded across other states), and is structured so swapping in a live database is a small change, not a rewrite.
+This is the real application, not a mockup: a working Next.js 14 (App Router) + TypeScript + Tailwind codebase, with a Prisma schema ready for PostgreSQL/PostGIS. It builds and runs today on static seed data (304 verified Karnataka places + 81 verified Telangana places + 43 verified Maharashtra places + 44 verified Tamil Nadu places + 9 verified Andhra Pradesh places + 34 verified Arunachal Pradesh places + 33 verified Delhi places + 33 verified Kerala places + 67 verified Madhya Pradesh places + 89 verified West Bengal places + 22 seeded across other states), and is structured so swapping in a live database is a small change, not a rewrite.
 
 ## Quick start
 
@@ -53,7 +53,7 @@ components/
   Nav.tsx
   PlaceCard.tsx           Core reusable card, used on home/explore/state pages
 lib/
-  data/places.ts          Current data source — 703 places, typed, ready to seed a DB from
+  data/places.ts          Current data source — 759 places, typed, ready to seed a DB from
   geo.ts                  Haversine distance + Google Maps directions URL builder
   i18n.ts                 EN/HI/KN dictionary (UI strings — see note below)
 prisma/
