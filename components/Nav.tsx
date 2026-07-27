@@ -1,0 +1,24 @@
+import Link from 'next/link';
+
+export default function Nav() {
+  return (
+    <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-paper/90 backdrop-blur border-b border-black/10">
+      <Link href="/" className="flex items-center gap-2 font-display text-xl">
+        <span className="w-8 h-8 rounded-full border-2 border-vermillion flex items-center justify-center text-vermillion text-sm -rotate-6">
+          म
+        </span>
+        Margasiri
+      </Link>
+      <div className="hidden md:flex gap-6 text-sm font-medium opacity-75">
+        <Link href="/explore" className="hover:opacity-100">Explore</Link>
+        <Link href="/state/karnataka" className="hover:opacity-100">Karnataka</Link>
+      </div>
+      <Link
+        href="/explore"
+        className="bg-indigo text-paper-light px-4 py-2 rounded-lg text-sm font-semibold"
+      >
+        Start exploring
+      </Link>
+    </nav>
+  );
+}

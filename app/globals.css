@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Yatra+One&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+body {
+  background-color: #e9e0c9;
+  background-image: radial-gradient(circle at 1px 1px, rgba(28, 27, 24, 0.06) 1px, transparent 0);
+  background-size: 22px 22px;
+  color: #1c1b18;
+}
+
+.milestone {
+  background: #e9e0c9;
+  color: #101c33;
+  border-radius: 10px 10px 4px 4px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+}

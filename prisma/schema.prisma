@@ -1,0 +1,178 @@
+// Margasiri database schema
+// Run against a real PostgreSQL instance (Supabase, Neon, or Railway all support PostGIS).
+// Coordinates are plain Float columns for now so the app works on any Postgres immediately.
+// Once you're at scale, add a PostGIS `geography(Point,4326)` column (see note at bottom)
+// and index it — that's what makes "places within 50km" queries fast at 10,000+ rows.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model State {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  region    String? // North / South / East / West / Northeast / Central
+  districts District[]
+  places    Place[]
+}
+
+model District {
+  id            String  @id @default(cuid())
+  name          String
+  slug          String  @unique
+  headquarters  String?
+  state         State   @relation(fields: [stateId], references: [id])
+  stateId       String
+  places        Place[]
+
+  @@unique([stateId, name])
+}
+
+enum PlaceCategory {
+  VILLAGE
+  HERITAGE
+  HILLS
+  BEACH
+  WILDLIFE
+  VALLEY
+  WILDERNESS
+  SPIRITUAL
+}
+
+enum PlaceSource {
+  CURATED
+  CROWDSOURCED
+  PARTNER_DATA
+}
+
+enum PlaceStatus {
+  DRAFT
+  PUBLISHED
+  NEEDS_REVIEW
+}
+
+model Place {
+  id                    String        @id @default(cuid())
+  name                  String
+  slug                  String        @unique
+  district              District      @relation(fields: [districtId], references: [id])
+  districtId            String
+  state                 State         @relation(fields: [stateId], references: [id])
+  stateId               String
+
+  latitude              Float
+  longitude             Float
+
+  category              PlaceCategory
+  shortDescription      String
+  longDescription        String?
+  bestTimeToVisit       String?
+  nearestTown            String?
+  nearestRailwayStation  String?
+  nearestAirport         String?
+  howToReach              String?
+  entryFee                String?
+  permitRequired         Boolean       @default(false)
+  permitNotes             String?
+
+  status                PlaceStatus   @default(DRAFT)
+  source                PlaceSource   @default(CURATED)
+
+  images                PlaceImage[]
+  translations          PlaceTranslation[]
+  reviews               Review[]
+  savedBy               SavedPlace[]
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+// Per-language content — this is how EN / HI / KN place descriptions are stored.
+// One row per (place, language). If a translation is missing, the app falls back to English.
+model PlaceTranslation {
+  id          String @id @default(cuid())
+  place       Place  @relation(fields: [placeId], references: [id])
+  placeId     String
+  language    String // "en" | "hi" | "kn"
+  name        String
+  description String
+
+  @@unique([placeId, language])
+}
+
+model PlaceImage {
+  id        String  @id @default(cuid())
+  place     Place   @relation(fields: [placeId], references: [id])
+  placeId   String
+  url       String
+  caption   String?
+  isCover   Boolean @default(false)
+  status    String  @default("pending") // pending | approved
+}
+
+model User {
+  id        String       @id @default(cuid())
+  name      String?
+  email     String?      @unique
+  phone     String?      @unique
+  createdAt DateTime     @default(now())
+  reviews   Review[]
+  saved     SavedPlace[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  place     Place    @relation(fields: [placeId], references: [id])
+  placeId   String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  rating    Int
+  text      String?
+  createdAt DateTime @default(now())
+}
+
+model SavedPlace {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  place     Place    @relation(fields: [placeId], references: [id])
+  placeId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, placeId])
+}
+
+// Quarantine table for crowdsourced submissions — never goes live until moderated.
+model Submission {
+  id             String   @id @default(cuid())
+  submittedName  String
+  submittedEmail String?
+  placeName      String
+  districtGuess  String?
+  stateGuess     String?
+  latitude       Float?
+  longitude      Float?
+  description    String
+  status         String   @default("pending") // pending | approved | rejected
+  reviewerNotes  String?
+  createdAt      DateTime @default(now())
+}
+
+// --- PostGIS upgrade note ---
+// Once on real Postgres with the PostGIS extension enabled, add a generated
+// geography column + spatial index via raw SQL migration:
+//
+//   CREATE EXTENSION IF NOT EXISTS postgis;
+//   ALTER TABLE "Place" ADD COLUMN geog geography(Point, 4326)
+//     GENERATED ALWAYS AS (ST_MakePoint(longitude, latitude)::geography) STORED;
+//   CREATE INDEX place_geog_idx ON "Place" USING GIST (geog);
+//
+// Then "nearest N places" becomes:
+//   SELECT *, ST_Distance(geog, ST_MakePoint($lng,$lat)::geography) AS distance_m
+//   FROM "Place" ORDER BY geog <-> ST_MakePoint($lng,$lat)::geography LIMIT 20;
