@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Settings } from 'lucide-react';
 import PlaceCard from '@/components/PlaceCard';
 import { PLACES } from '@/lib/data/places';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -81,9 +82,14 @@ export default async function ProfilePage() {
             <h1 className="font-display text-4xl">{user.user_metadata?.name ?? user.email}</h1>
             <p className="mt-1 text-sm opacity-75">Joined {new Date(user.created_at).toLocaleDateString()}</p>
           </div>
-          <Link href="/profile/map" className="ml-auto rounded-lg bg-paper-light px-4 py-3 text-sm font-semibold text-indigo">
-            My Map
-          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <Link href="/profile/map" className="rounded-lg bg-paper-light px-4 py-3 text-sm font-semibold text-indigo">
+              My Map
+            </Link>
+            <Link href="/settings" className="rounded-full bg-paper-light p-3 text-indigo" aria-label="Settings">
+              <Settings size={18} />
+            </Link>
+          </div>
         </div>
       </section>
 

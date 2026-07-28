@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import BackButton from '@/components/BackButton';
 import InAppDirections from '@/components/InAppDirections';
 import { getPlaceCategories } from '@/lib/categories';
 import { PLACES, getPlaceBySlug } from '@/lib/data/places';
-import { externalDirectionsUrl } from '@/lib/geo';
 import { getPlaceDetails } from '@/lib/placeDetails';
 
 export function generateStaticParams() {
@@ -14,7 +14,7 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   const place = getPlaceBySlug(params.slug);
   if (!place) return {};
   return {
-    title: `${place.name} — ${place.district}, ${place.state} | Margasiri`,
+    title: `${place.name} - ${place.district}, ${place.state} | Margasiri`,
     description: place.description
   };
 }
@@ -25,13 +25,15 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
 
   const img = `https://picsum.photos/seed/${place.slug}/1200/700`;
   const details = getPlaceDetails(place);
-  const externalMapUrl = externalDirectionsUrl({ lat: place.lat, lng: place.lng });
   const categories = getPlaceCategories(place);
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-10">
+    <main className="mx-auto max-w-5xl px-6 py-6 pb-36">
       <section className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start mb-10">
-        <img src={img} alt={place.name} className="w-full h-80 lg:h-[430px] object-cover rounded-2xl bg-paper-dark" />
+        <div className="relative">
+          <BackButton />
+          <img src={img} alt={place.name} className="w-full h-80 lg:h-[430px] object-cover rounded-2xl bg-paper-dark" />
+        </div>
         <div className="lg:pt-3">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {categories.map((category) => (
@@ -54,24 +56,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
             ))}
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link
-              href={`/journey/${place.slug}`}
-              className="inline-block bg-vermillion text-paper-light px-6 py-3 rounded-lg font-semibold text-sm"
-            >
-              Start Journey
-            </Link>
-            <a
-              href={externalMapUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-block border border-black/15 bg-paper-light px-6 py-3 rounded-lg font-semibold text-sm"
-            >
-              Open in Google Maps
-            </a>
-            <a
-              href="#directions"
-              className="inline-block border border-black/15 px-6 py-3 rounded-lg font-semibold text-sm"
-            >
+            <a href="#directions" className="inline-block border border-black/15 px-6 py-3 rounded-lg font-semibold text-sm">
               Preview route
             </a>
           </div>
@@ -132,6 +117,18 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
           <p className="text-sm font-medium">{place.category}</p>
         </div>
       </section>
+
+      <div className="fixed inset-x-0 bottom-[76px] z-40 border-t border-black/10 bg-paper/95 px-4 py-3 shadow-2xl backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{place.name}</p>
+            <p className="text-xs opacity-60">{place.district}, {place.state}</p>
+          </div>
+          <Link href={`/journey/${place.slug}`} className="rounded-xl bg-vermillion px-5 py-3 text-sm font-semibold text-paper-light">
+            Start Journey
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
