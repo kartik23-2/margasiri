@@ -2,78 +2,65 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Place } from '@/lib/data/places';
+import { MAPLIBRE_CSS, MAPLIBRE_JS, missingTileProviderMessage, osmStyleUrl } from '@/lib/mapLibre';
 
 declare global {
   interface Window {
-    mapboxgl?: any;
+    maplibregl?: any;
   }
 }
 
-const MAPBOX_CSS = 'https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css';
-const MAPBOX_JS = 'https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js';
-
-function loadMapbox() {
-  if (window.mapboxgl) return Promise.resolve(window.mapboxgl);
+function loadMapLibre() {
+  if (window.maplibregl) return Promise.resolve(window.maplibregl);
 
   return new Promise<any>((resolve, reject) => {
-    if (!document.querySelector(`link[href="${MAPBOX_CSS}"]`)) {
+    if (!document.querySelector(`link[href="${MAPLIBRE_CSS}"]`)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = MAPBOX_CSS;
+      link.href = MAPLIBRE_CSS;
       document.head.appendChild(link);
     }
 
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${MAPLIBRE_JS}"]`);
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.maplibregl));
+      existing.addEventListener('error', reject);
+      return;
+    }
+
     const script = document.createElement('script');
-    script.src = MAPBOX_JS;
+    script.src = MAPLIBRE_JS;
     script.async = true;
-    script.onload = () => resolve(window.mapboxgl);
+    script.onload = () => resolve(window.maplibregl);
     script.onerror = reject;
     document.body.appendChild(script);
   });
-}
-
-function brandStyle(): any {
-  return {
-    version: 8,
-    glyphs: 'mapbox://fonts/mapbox/{fontstack}/{range}.pbf',
-    sources: {
-      composite: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' }
-    },
-    layers: [
-      { id: 'background', type: 'background', paint: { 'background-color': '#e9e0c9' } },
-      { id: 'landuse', type: 'fill', source: 'composite', 'source-layer': 'landuse', paint: { 'fill-color': '#d9dcc5', 'fill-opacity': 0.55 } },
-      { id: 'water', type: 'fill', source: 'composite', 'source-layer': 'water', paint: { 'fill-color': '#8db8bd' } },
-      { id: 'roads', type: 'line', source: 'composite', 'source-layer': 'road', paint: { 'line-color': '#fdfaf1', 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.2, 12, 3] } },
-      { id: 'labels', type: 'symbol', source: 'composite', 'source-layer': 'place_label', layout: { 'text-field': ['get', 'name'], 'text-size': 12 }, paint: { 'text-color': '#1b2a4a', 'text-halo-color': '#e9e0c9', 'text-halo-width': 1 } }
-    ]
-  };
 }
 
 export default function AllPlacesMap({ places }: { places: Place[] }) {
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const [status, setStatus] = useState('Loading map...');
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const tileStyleUrl = osmStyleUrl();
 
   useEffect(() => {
-    if (!token) {
-      setStatus('Mapbox token is missing. Add NEXT_PUBLIC_MAPBOX_TOKEN to browse by map.');
+    if (!tileStyleUrl) {
+      setStatus(missingTileProviderMessage('the India map tab'));
       return undefined;
     }
 
     let disposed = false;
-    loadMapbox()
-      .then((mapboxgl) => {
+    loadMapLibre()
+      .then((maplibregl) => {
         if (disposed || !nodeRef.current) return;
-        mapboxgl.accessToken = token;
-        const map = new mapboxgl.Map({
+        const map = new maplibregl.Map({
           container: nodeRef.current,
-          style: brandStyle(),
+          style: tileStyleUrl,
           center: [78.9629, 22.5937],
           zoom: 4.2,
-          attributionControl: false
+          attributionControl: true
         });
-        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+        map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
         mapRef.current = map;
 
         map.on('load', () => {
@@ -145,7 +132,7 @@ export default function AllPlacesMap({ places }: { places: Place[] }) {
             const feature = event.features?.[0];
             if (!feature) return;
             const props = feature.properties;
-            new mapboxgl.Popup()
+            new maplibregl.Popup()
               .setLngLat(feature.geometry.coordinates)
               .setHTML(`<strong>${props.name}</strong><br/><span>${props.state}</span><br/><a href="/place/${props.slug}">Open details</a>`)
               .addTo(map);
@@ -154,13 +141,13 @@ export default function AllPlacesMap({ places }: { places: Place[] }) {
           setStatus(`${places.length} places on the map.`);
         });
       })
-      .catch(() => setStatus('Could not load Mapbox.'));
+      .catch(() => setStatus('Could not load the OSM map style.'));
 
     return () => {
       disposed = true;
       mapRef.current?.remove();
     };
-  }, [places, token]);
+  }, [places, tileStyleUrl]);
 
   return (
     <div className="relative h-[calc(100vh-145px)] min-h-[560px] overflow-hidden bg-indigo">

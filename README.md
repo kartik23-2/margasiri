@@ -1,77 +1,120 @@
 # Margasiri
 
-India's hidden villages, valleys and heritage sites — sorted by live distance from you. English, Hindi, Kannada.
+India's hidden villages, valleys and heritage sites, sorted by live distance from you. English, Hindi, Kannada.
 
-This is the real application, not a mockup: a working Next.js 14 (App Router) + TypeScript + Tailwind codebase, with a Prisma schema ready for PostgreSQL/PostGIS. It builds and runs today on static seed data (304 verified Karnataka places + 81 verified Telangana places + 43 verified Maharashtra places + 44 verified Tamil Nadu places + 9 verified Andhra Pradesh places + 34 verified Arunachal Pradesh places + 33 verified Delhi places + 33 verified Kerala places + 67 verified Madhya Pradesh places + 89 verified West Bengal places + 52 verified Goa places + 45 verified Punjab places + 48 verified Rajasthan places + 51 verified Bihar places + 46 verified Meghalaya places + 64 verified Nagaland places + 45 verified Assam places + 89 verified Gujarat places + 50 verified Sikkim places + 12 seeded across other states), and is structured so swapping in a live database is a small change, not a rewrite.
+This is a working Next.js 14 App Router + TypeScript + Tailwind application with Supabase auth/profile wiring, static place data, in-app journey screens, and a Prisma schema ready for PostgreSQL/PostGIS.
 
-## Quick start
+## Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Home page, `/explore`, individual `/place/[slug]` pages, and `/state/[slug]` pages all work immediately — no database required, because they currently read from `lib/data/places.ts`.
+Open http://localhost:3000. Home, Explore, Map, Saved, Profile, place detail pages, journey pages, and state pages all build from the app code.
 
-## What's real vs. what's next
+Map screens also need:
 
-**Working right now:**
-- Full Next.js app, builds clean (`npm run build` — verified, with static pages pre-rendered for SEO)
-- Live geolocation + real Haversine distance calculation, both client-side and via `/api/places`
-- Search, state filter, category filter on `/explore`
-- Individual SEO-ready pages for every place and every state (this is the SEO growth engine from the roadmap doc)
-- "Verified" vs "Community-submitted, unverified" badge already wired into the data model and the UI
-- Prisma schema modeling the full plan: states, districts, places, translations, images, reviews, saved places, and a `Submission` quarantine table for crowdsourcing
+```bash
+NEXT_PUBLIC_TILE_PROVIDER_URL="https://your-provider/style.json"
+OSRM_SERVER_URL="http://your-private-osrm-host:5000"
+```
 
-**Needs a real database to go further** (see below):
-- Currently all data lives in `lib/data/places.ts` (TypeScript, not a database) — this was deliberate, so the app runs and demos with zero setup
-- Swapping to Prisma + Postgres is a contained change: see `app/api/places/route.ts`, which has the exact swap commented in
+Use a MapLibre-compatible OpenStreetMap-data style from MapTiler, Stadia Maps, Geoapify, or your own `tileserver-gl`. Do not use the public `tile.openstreetmap.org` server for a production app.
 
-## Connecting a real database
+## Working Now
 
-1. Get a Postgres instance with PostGIS available — **Supabase** or **Neon** both work well and have generous free tiers, or **Railway**.
-2. Copy `.env.example` to `.env` and set `DATABASE_URL`.
-3. Run:
+- Full Next.js app, builds clean with static pages pre-rendered for SEO.
+- 1237 places in `lib/data/places.ts`.
+- Bottom tab app navigation: Home, Explore, Map, Saved, Profile.
+- Live geolocation and Haversine distance calculation.
+- Search and bottom-sheet filters on `/explore`.
+- First-class `/map` tab with clustered pins for all places.
+- `/saved`, `/profile`, settings, Google sign-in, and email/password auth flows.
+- In-app journey screen with live position tracking, rerouting checks, arrival detection, and turn-by-turn bottom sheet.
+- Map rendering through MapLibre GL JS.
+- Journey routing through `/api/journey/route`, which proxies to a private OSRM server.
+
+## OpenStreetMap Routing And Tiles
+
+Margasiri now uses an open-source map stack instead of Mapbox.
+
+- **Rendering:** MapLibre GL JS. This was chosen over Leaflet because the existing journey implementation already used Mapbox GL-style vector maps, markers, camera movement, and route layers. MapLibre is the open-source fork of Mapbox GL JS, so the migration keeps the same model with much less rewrite risk.
+- **Tiles:** configured by `NEXT_PUBLIC_TILE_PROVIDER_URL`. Start with a managed OSM-data vector tile provider such as MapTiler, Stadia Maps, or Geoapify. This keeps the app on OpenStreetMap data without taking on tile generation infrastructure immediately.
+- **Routing:** a private self-hosted OSRM server, proxied through `/api/journey/route`. The OSRM server itself should not be exposed directly to the public internet.
+
+This is not zero-cost. It trades Mapbox's per-request billing for operational responsibility: a VPS, monitoring, OSM extract refreshes, disk space, and someone accountable when routing is down. The upside is no vendor per-call ceiling as usage grows and full control over routing data.
+
+Recommended starter OSRM host: a modest VPS such as Hetzner CX22, DigitalOcean Basic 2 vCPU / 4 GB RAM, or AWS Lightsail 2 vCPU / 4 GB RAM with enough disk for the India extract and preprocessed OSRM files. If preprocessing fails or route traffic grows, increase RAM/disk first.
+
+Run the repeatable refresh script on the OSRM server:
+
+```bash
+bash scripts/update-osrm-data.sh
+```
+
+The script downloads the Geofabrik India extract and runs:
+
+```text
+osrm-extract -> osrm-partition -> osrm-customize
+```
+
+Run `osrm-routed` privately and set `OSRM_SERVER_URL` in Vercel to that private base URL. Schedule `scripts/update-osrm-data.sh` monthly to start; stale OSM data means stale route quality.
+
+If managed vector tiles become too expensive later, the next step is full tile self-hosting with OpenMapTiles + `tileserver-gl` using the same India OSM extract. That is intentionally documented as a later scaling move, not the day-one default.
+
+Scope note: OSRM does not provide live traffic-aware routing or ETAs. Journey durations are route estimates only.
+
+## Connecting Supabase
+
+1. Copy `.env.example` to `.env`.
+2. Set:
    ```bash
-   npx prisma generate
-   npx prisma migrate dev --name init
+   NEXT_PUBLIC_SUPABASE_URL=""
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=""
+   SUPABASE_SERVICE_ROLE_KEY=""
    ```
-4. Enable PostGIS and add the geography column (see the comment block at the bottom of `prisma/schema.prisma` — it has the exact SQL). This is what makes "places within N km" queries fast once you're past a few thousand rows; below that, plain lat/lng columns (already in the schema) are fine.
-5. Write a seed script (`prisma/seed.ts`) that inserts the places from `lib/data/places.ts` — that file is already structured 1:1 with the schema, so this is mostly a loop, not a rewrite.
-6. Update `app/api/places/route.ts` to query Prisma instead of the static array (the swap is commented directly in that file).
+3. Run `supabase/schema.sql` in the Supabase SQL editor to create profile, saved, visited, contribution, and RLS tables.
+4. Enable Google in Supabase Auth Providers if using Google sign-in.
 
-## Project structure
+## Project Structure
 
-```
+```text
 app/
-  page.tsx              Home — hero, live location toggle, nearby places
-  explore/page.tsx       Search + filter + full listing
-  place/[slug]/page.tsx  Individual place page (SEO-critical, statically generated)
-  state/[slug]/page.tsx  State overview page
-  api/places/route.ts    API route — swap this for Prisma when ready
+  page.tsx                    Home feed
+  explore/page.tsx             Search and filter browsing
+  map/page.tsx                 All-places MapLibre map
+  place/[slug]/page.tsx        SEO-ready place details
+  journey/[slug]/page.tsx      Full-screen in-app navigation
+  api/journey/route/route.ts   OSRM proxy for route geometry and steps
+  api/places/route.ts          Static places API, ready to swap to DB
 components/
-  Nav.tsx
-  PlaceCard.tsx           Core reusable card, used on home/explore/state pages
+  BottomTabBar.tsx             Persistent app navigation
+  JourneyMap.tsx               MapLibre + OSRM live journey screen
+  JourneyStepsSheet.tsx        Turn-by-turn sheet
+  AllPlacesMap.tsx             Clustered all-places map
+  ProfileMap.tsx               Saved/visited user map
+  PlaceCard.tsx                Reusable destination card
 lib/
-  data/places.ts          Current data source — 1237 places, typed, ready to seed a DB from
-  geo.ts                  Haversine distance + Google Maps directions URL builder
-  i18n.ts                 EN/HI/KN dictionary (UI strings — see note below)
-prisma/
-  schema.prisma           Full database schema, PostGIS upgrade path documented inline
+  data/places.ts               Current static data source
+  geo.ts                       Distance helpers
+  mapLibre.ts                  MapLibre CDN and tile-provider helpers
+  supabase/                    Supabase clients
+scripts/
+  update-osrm-data.sh          OSRM India extract refresh/preprocess script
 ```
 
-## Language status
+## Language Status
 
-- UI dictionary (`lib/i18n.ts`) has English, Hindi, and Kannada strings, but **is not yet wired into the pages** — pages are English-only right now. Next step: a language context/provider and swapping hardcoded strings for `t(lang, 'key')` calls.
-- Place descriptions are English-only. The Prisma schema already has a `PlaceTranslation` model (one row per place per language) ready for this — translating the 304 Karnataka descriptions into Hindi and Kannada is the next real content task, not a technical blocker.
-
-## Known gaps (intentionally not built yet)
-
-- No authentication yet (`User` model exists in the schema, no auth flow wired up)
-- No image upload / real photos — using picsum.photos placeholders, matching the earlier prototype
-- No admin/moderation panel for the `Submission` table yet
-- No mobile app (React Native) yet — this is the web app only
+- UI dictionary (`lib/i18n.ts`) has English, Hindi, and Kannada strings, but hardcoded page text still needs to be fully wired into that dictionary.
+- Place descriptions are English-only. The Prisma schema has a `PlaceTranslation` model ready for translated content.
 
 ## Deploying
 
-This is a standard Next.js app — deploys cleanly to Vercel (`vercel deploy`) or any Node host. Set `DATABASE_URL` as an environment variable once a real database is connected.
+Deploy to Vercel with:
+
+```bash
+vercel deploy --prod
+```
+
+Set Supabase env vars, `NEXT_PUBLIC_TILE_PROVIDER_URL`, and `OSRM_SERVER_URL` in Vercel production. Without the tile style and OSRM URL, map and routing screens will show setup messages instead of silently falling back to public OSM infrastructure.

@@ -5,6 +5,9 @@ export interface JourneyStep {
   distance: number;
   duration: number;
   location: [number, number];
+  maneuverType?: string;
+  modifier?: string | null;
+  roadName?: string;
 }
 
 interface Props {
@@ -87,7 +90,7 @@ export default function JourneyStepsSheet({
               <li key={`${step.instruction}-${index}`} className={`py-3 ${index === activeStepIndex ? 'text-indigo' : ''}`}>
                 <p className="text-sm font-semibold">{step.instruction}</p>
                 <p className="mt-1 text-xs opacity-60">
-                  {formatDistance(step.distance)} · {formatDuration(step.duration)}
+                  {formatDistance(step.distance)} - {formatDuration(step.duration)}
                 </p>
               </li>
             ))}
