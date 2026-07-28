@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import BackButton from '@/components/BackButton';
-import InAppDirections from '@/components/InAppDirections';
+import GoogleDirectionsLink from '@/components/GoogleDirectionsLink';
 import { getPlaceCategories } from '@/lib/categories';
 import { PLACES, getPlaceBySlug } from '@/lib/data/places';
 import { getPlaceDetails } from '@/lib/placeDetails';
@@ -56,9 +55,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
             ))}
           </div>
           <div className="flex flex-wrap gap-3">
-            <a href="#directions" className="inline-block border border-black/15 px-6 py-3 rounded-lg font-semibold text-sm">
-              Preview route
-            </a>
+            <GoogleDirectionsLink destination={{ lat: place.lat, lng: place.lng }} />
           </div>
         </div>
       </section>
@@ -97,8 +94,6 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
         </article>
       </section>
 
-      <InAppDirections place={place} />
-
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-paper-light border border-black/10 rounded-xl p-4">
           <p className="text-xs opacity-60 mb-1">Coordinates</p>
@@ -124,9 +119,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
             <p className="truncate text-sm font-semibold">{place.name}</p>
             <p className="text-xs opacity-60">{place.district}, {place.state}</p>
           </div>
-          <Link href={`/journey/${place.slug}`} className="rounded-xl bg-vermillion px-5 py-3 text-sm font-semibold text-paper-light">
-            Start Journey
-          </Link>
+          <GoogleDirectionsLink destination={{ lat: place.lat, lng: place.lng }} />
         </div>
       </div>
     </main>

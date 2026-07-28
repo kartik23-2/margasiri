@@ -17,27 +17,10 @@ export function haversineKm(a: Coords, b: Coords): number {
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-export function mapEmbedUrl(dest: Coords, label: string): string {
-  const q = encodeURIComponent(`${label} ${dest.lat},${dest.lng}`);
-  return `https://maps.google.com/maps?q=${q}&z=11&output=embed`;
-}
-
-export function directionsEmbedUrl(dest: Coords, origin: Coords | null, mode: 'driving' | 'bicycling' | 'transit' | 'walking'): string {
-  if (!origin) return mapEmbedUrl(dest, `${dest.lat},${dest.lng}`);
-
-  const flags = {
-    driving: 'd',
-    bicycling: 'b',
-    transit: 'r',
-    walking: 'w'
-  };
-
-  const saddr = encodeURIComponent(`${origin.lat},${origin.lng}`);
-  const daddr = encodeURIComponent(`${dest.lat},${dest.lng}`);
-  return `https://maps.google.com/maps?saddr=${saddr}&daddr=${daddr}&dirflg=${flags[mode]}&output=embed`;
-}
-
-export function externalDirectionsUrl(dest: Coords): string {
+export function externalDirectionsUrl(dest: Coords, origin: Coords | null = null): string {
   const destination = encodeURIComponent(`${dest.lat},${dest.lng}`);
-  return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+  if (!origin) return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+
+  const originParam = encodeURIComponent(`${origin.lat},${origin.lng}`);
+  return `https://www.google.com/maps/dir/?api=1&origin=${originParam}&destination=${destination}`;
 }

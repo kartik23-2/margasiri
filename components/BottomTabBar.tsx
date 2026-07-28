@@ -19,7 +19,6 @@ function isActive(pathname: string, href: string) {
 
 export default function BottomTabBar() {
   const pathname = usePathname();
-  if (pathname.startsWith('/journey/')) return null;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-paper/10 bg-indigo px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 text-paper-light shadow-2xl">

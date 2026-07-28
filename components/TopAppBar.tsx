@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 
 export default function TopAppBar() {
   const pathname = usePathname();
-  if (pathname.startsWith('/journey/')) return null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-black/10 bg-paper/95 px-4 py-3 backdrop-blur">

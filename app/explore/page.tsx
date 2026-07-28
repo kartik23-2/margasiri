@@ -7,6 +7,7 @@ import PlaceCard from '@/components/PlaceCard';
 import { getPlaceCategories } from '@/lib/categories';
 import { PLACES, getStates } from '@/lib/data/places';
 import { haversineKm } from '@/lib/geo';
+import { saveLastLocation } from '@/lib/lastLocation';
 
 export default function ExplorePage() {
   const [q, setQ] = useState('');
@@ -20,7 +21,11 @@ export default function ExplorePage() {
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setOrigin(next);
+        saveLastLocation(next);
+      },
       () => {},
       { enableHighAccuracy: true, timeout: 10000 }
     );

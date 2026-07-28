@@ -6,6 +6,7 @@ import PlaceCard from '@/components/PlaceCard';
 import { getPlaceCategories } from '@/lib/categories';
 import { PLACES, type Place } from '@/lib/data/places';
 import { haversineKm } from '@/lib/geo';
+import { saveLastLocation } from '@/lib/lastLocation';
 
 interface PlaceWithDistance extends Place {
   distanceKm?: number | null;
@@ -66,6 +67,7 @@ export default function HomePage() {
       (pos) => {
         const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setOrigin(next);
+        saveLastLocation(next);
         setTracking(true);
       },
       () => {},
@@ -83,7 +85,9 @@ export default function HomePage() {
     if (!('geolocation' in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setOrigin(next);
+        saveLastLocation(next);
         setTracking(true);
       },
       () => setTracking(false),

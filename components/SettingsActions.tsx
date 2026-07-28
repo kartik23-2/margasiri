@@ -10,7 +10,7 @@ export function ShareAppButton() {
   async function share() {
     const shareData = {
       title: 'Margasiri',
-      text: 'Find overlooked places across India with live distance and in-app journeys.',
+      text: 'Find overlooked places across India with live distance and Google Maps directions.',
       url: 'https://margasiri.vercel.app'
     };
 
