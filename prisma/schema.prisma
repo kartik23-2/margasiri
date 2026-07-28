@@ -34,17 +34,6 @@ model District {
   @@unique([stateId, name])
 }
 
-enum PlaceCategory {
-  VILLAGE
-  HERITAGE
-  HILLS
-  BEACH
-  WILDLIFE
-  VALLEY
-  WILDERNESS
-  SPIRITUAL
-}
-
 enum PlaceSource {
   CURATED
   CROWDSOURCED
@@ -69,7 +58,7 @@ model Place {
   latitude              Float
   longitude             Float
 
-  category              PlaceCategory
+  categories            PlaceCategoryLink[]
   shortDescription      String
   longDescription        String?
   bestTimeToVisit       String?
@@ -88,9 +77,29 @@ model Place {
   translations          PlaceTranslation[]
   reviews               Review[]
   savedBy               SavedPlace[]
+  visitedBy             VisitedPlace[]
+  improvements          Contribution[]
+  contributor           User?         @relation("PlaceContributor", fields: [contributorId], references: [id])
+  contributorId         String?
 
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+}
+
+model Category {
+  id     String              @id @default(cuid())
+  name   String              @unique
+  slug   String              @unique
+  places PlaceCategoryLink[]
+}
+
+model PlaceCategoryLink {
+  place      Place    @relation(fields: [placeId], references: [id])
+  placeId    String
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  @@id([placeId, categoryId])
 }
 
 // Per-language content — this is how EN / HI / KN place descriptions are stored.
@@ -120,10 +129,14 @@ model User {
   id        String       @id @default(cuid())
   name      String?
   email     String?      @unique
+  image     String?
   phone     String?      @unique
   createdAt DateTime     @default(now())
   reviews   Review[]
   saved     SavedPlace[]
+  visited   VisitedPlace[]
+  contributed Place[]    @relation("PlaceContributor")
+  improvements Contribution[]
 }
 
 model Review {
@@ -146,6 +159,30 @@ model SavedPlace {
   createdAt DateTime @default(now())
 
   @@unique([userId, placeId])
+}
+
+model VisitedPlace {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  place     Place    @relation(fields: [placeId], references: [id])
+  placeId   String
+  visitedOn DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, placeId])
+}
+
+model Contribution {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  place       Place    @relation(fields: [placeId], references: [id])
+  placeId     String
+  type        String
+  description String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
 }
 
 // Quarantine table for crowdsourced submissions — never goes live until moderated.

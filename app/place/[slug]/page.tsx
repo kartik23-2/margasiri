@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import InAppDirections from '@/components/InAppDirections';
+import { getPlaceCategories } from '@/lib/categories';
 import { PLACES, getPlaceBySlug } from '@/lib/data/places';
 import { externalDirectionsUrl } from '@/lib/geo';
 import { getPlaceDetails } from '@/lib/placeDetails';
@@ -25,6 +26,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
   const img = `https://picsum.photos/seed/${place.slug}/1200/700`;
   const details = getPlaceDetails(place);
   const externalMapUrl = externalDirectionsUrl({ lat: place.lat, lng: place.lng });
+  const categories = getPlaceCategories(place);
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-10">
@@ -32,9 +34,11 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
         <img src={img} alt={place.name} className="w-full h-80 lg:h-[430px] object-cover rounded-2xl bg-paper-dark" />
         <div className="lg:pt-3">
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="text-[10px] uppercase tracking-wide bg-indigo text-paper px-2 py-1 rounded-full">
-              {place.category}
-            </span>
+            {categories.map((category) => (
+              <span key={category} className="text-[10px] uppercase tracking-wide bg-indigo text-paper px-2 py-1 rounded-full">
+                {category}
+              </span>
+            ))}
             <span className="text-[10px] uppercase tracking-wide bg-pine text-white px-2 py-1 rounded-full">
               {place.verified ? 'Verified' : 'Community-submitted, unverified'}
             </span>

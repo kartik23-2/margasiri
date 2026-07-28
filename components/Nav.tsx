@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import AuthNavLink from '@/components/AuthNavLink';
 
 export default function Nav() {
   const pathname = usePathname();
@@ -19,6 +20,8 @@ export default function Nav() {
       <div className="hidden md:flex gap-6 text-sm font-medium opacity-75">
         <Link href="/explore" className="hover:opacity-100">Explore</Link>
         <Link href="/explore" className="hover:opacity-100">India</Link>
+        <Link href="/settings" className="hover:opacity-100">Settings</Link>
+        <AuthNavLink />
       </div>
       <Link
         href="/explore"
