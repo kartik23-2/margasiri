@@ -29,9 +29,12 @@ Use a MapLibre-compatible OpenStreetMap-data style from MapTiler, Stadia Maps, G
 - Live geolocation and Haversine distance calculation for sorting places by distance.
 - Search and bottom-sheet filters on `/explore`.
 - First-class `/map` tab with clustered pins for all places.
+- Multi-day `/trip` planner with local itinerary storage, day ordering, trip sharing/check-in copy, and rough cost summary.
 - `/saved`, `/profile`, settings, Google sign-in, and email/password auth flows.
 - Map browsing through MapLibre GL JS.
 - Place details use a simple external Google Maps directions link.
+- Place details include AI-generated utility notes for petrol, ATMs, hospitals, mobile network, public transport, emergency contacts, safety, and typical costs.
+- Place weather planner uses Open-Meteo's no-key forecast endpoint for dates in the next 16 days, then falls back to seasonal travel guidance.
 
 ## Directions
 
@@ -50,6 +53,20 @@ https://www.google.com/maps/dir/?api=1&origin={userLat},{userLng}&destination={l
 ```
 
 This keeps navigation simple: no routing API, no OSRM server, no traffic-data promise, no billing keys, and no infrastructure commitment before real usage shows that in-app navigation is worth building again. Google Maps gives users live traffic, voice guidance, and familiar navigation while Margasiri keeps their place open in a separate tab.
+
+## Trip Planning And Safety
+
+The first-stage planning layer is intentionally practical:
+
+- Add any place to a local multi-day trip.
+- Reorder stops and assign day numbers.
+- Estimate rough shared cost from route distance, fuel, toll buffer, food, and simple stay assumptions.
+- Share the plan/check-in text with a contact before leaving.
+- Read place-level notes for amenities, public transport, emergency numbers, and remote-area safety.
+
+The amenities and safety notes are generated from the place category, district, and remoteness profile. They are useful planning prompts, not official listings; travelers should reconfirm critical services locally before remote treks, forests, and late returns.
+
+Weather is fetched client-side from Open-Meteo for near-term forecasts. Their forecast API supports coordinates, daily variables, `start_date`/`end_date`, and up to 16 forecast days; outside that window, the app shows seasonal guidance instead.
 
 ## Map Browsing
 
@@ -74,11 +91,14 @@ app/
   page.tsx                    Home feed
   explore/page.tsx             Search and filter browsing
   map/page.tsx                 All-places MapLibre map
+  trip/page.tsx                Multi-day itinerary builder
   place/[slug]/page.tsx        SEO-ready place details with Google Maps directions
   api/places/route.ts          Static places API, ready to swap to DB
 components/
   BottomTabBar.tsx             Persistent app navigation
+  AddToTripButton.tsx          Adds a place to local trip storage
   GoogleDirectionsLink.tsx     External Google Maps directions link
+  WeatherPlanner.tsx           Date-based weather panel
   AllPlacesMap.tsx             Clustered all-places map
   ProfileMap.tsx               Saved/visited user map
   PlaceCard.tsx                Reusable destination card
@@ -87,6 +107,7 @@ lib/
   geo.ts                       Distance and Google Maps URL helpers
   lastLocation.ts              Last browser location captured by Home/Explore
   mapLibre.ts                  MapLibre CDN and tile-provider helpers
+  tripPlanning.ts              Generated utility, safety, transport, and cost guidance
   supabase/                    Supabase clients
 ```
 

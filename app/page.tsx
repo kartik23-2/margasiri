@@ -117,6 +117,9 @@ export default function HomePage() {
             <Link href="/map" className="rounded-xl border border-paper/30 px-5 py-3 text-sm font-semibold">
               Browse map
             </Link>
+            <Link href="/trip" className="rounded-xl border border-paper/30 px-5 py-3 text-sm font-semibold">
+              Plan trip
+            </Link>
           </div>
         </div>
       </section>

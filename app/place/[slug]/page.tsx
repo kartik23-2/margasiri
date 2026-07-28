@@ -1,9 +1,12 @@
 import { notFound } from 'next/navigation';
+import AddToTripButton from '@/components/AddToTripButton';
 import BackButton from '@/components/BackButton';
 import GoogleDirectionsLink from '@/components/GoogleDirectionsLink';
+import WeatherPlanner from '@/components/WeatherPlanner';
 import { getPlaceCategories } from '@/lib/categories';
 import { PLACES, getPlaceBySlug } from '@/lib/data/places';
 import { getPlaceDetails } from '@/lib/placeDetails';
+import { getTravelIntelligence } from '@/lib/tripPlanning';
 
 export function generateStaticParams() {
   return PLACES.map((p) => ({ slug: p.slug }));
@@ -25,6 +28,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
   const img = `https://picsum.photos/seed/${place.slug}/1200/700`;
   const details = getPlaceDetails(place);
   const categories = getPlaceCategories(place);
+  const travel = getTravelIntelligence(place);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-6 pb-36">
@@ -56,6 +60,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
           </div>
           <div className="flex flex-wrap gap-3">
             <GoogleDirectionsLink destination={{ lat: place.lat, lng: place.lng }} />
+            <AddToTripButton place={place} />
           </div>
         </div>
       </section>
@@ -68,6 +73,77 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
           <p className="text-xs uppercase tracking-wide opacity-50 mb-2">How to reach</p>
           <p className="text-sm leading-relaxed opacity-85">{details.howToReach}</p>
+        </article>
+      </section>
+
+      <section className="mb-8 grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+        <WeatherPlanner place={place} fallback={travel.weatherFallback} />
+        <article className="rounded-xl border border-black/10 bg-paper-light p-5">
+          <p className="mb-2 text-xs uppercase tracking-wide opacity-50">Trip readiness</p>
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full bg-indigo px-3 py-1 text-xs font-semibold text-paper-light">{travel.remoteness}</span>
+            {travel.safety.slice(0, 2).map((item) => (
+              <span key={item} className="rounded-full bg-paper px-3 py-1 text-xs">{item}</span>
+            ))}
+          </div>
+          <p className="mt-3 text-sm leading-relaxed opacity-80">
+            These notes are generated from place type, district, and remoteness. Reconfirm locally before remote treks, forests, and late returns.
+          </p>
+        </article>
+      </section>
+
+      <section className="mb-8">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-widest opacity-50">Nearby utilities</p>
+            <h2 className="font-display text-3xl">Plan the practical bits</h2>
+          </div>
+          <AddToTripButton place={place} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {travel.amenities.map((item) => (
+            <article key={item.label} className="rounded-xl border border-black/10 bg-paper-light p-4">
+              <p className="text-xs uppercase tracking-wide opacity-50">{item.label}</p>
+              <p className="mt-1 font-semibold">{item.value}</p>
+              <p className="mt-2 text-sm leading-relaxed opacity-75">{item.note}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mb-8 grid gap-4 lg:grid-cols-3">
+        <article className="rounded-xl border border-black/10 bg-paper-light p-5">
+          <p className="mb-4 text-xs uppercase tracking-wide opacity-50">Public transport</p>
+          <div className="space-y-4">
+            {travel.publicTransport.map((item) => (
+              <div key={item.label}>
+                <p className="text-sm font-semibold">{item.label}: {item.value}</p>
+                <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="rounded-xl border border-vermillion/25 bg-paper-light p-5">
+          <p className="mb-4 text-xs uppercase tracking-wide text-vermillion">SOS and emergency</p>
+          <div className="space-y-4">
+            {travel.emergency.map((item) => (
+              <div key={item.label}>
+                <p className="text-sm font-semibold">{item.label}: {item.value}</p>
+                <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="rounded-xl border border-black/10 bg-paper-light p-5">
+          <p className="mb-4 text-xs uppercase tracking-wide opacity-50">Rough cost estimator</p>
+          <div className="space-y-4">
+            {travel.costs.map((item) => (
+              <div key={item.label}>
+                <p className="text-sm font-semibold">{item.label}: {item.value}</p>
+                <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
+              </div>
+            ))}
+          </div>
         </article>
       </section>
 
