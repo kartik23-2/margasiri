@@ -552,6 +552,13 @@ const holidifyArunachalPradeshSupplemental: Omit<Place, 'slug' | 'stateSlug' | '
   { name: 'Hayuliang', state: 'Arunachal Pradesh', district: 'Anjaw', lat: 28.0736, lng: 96.5436, category: 'Hills', description: 'Hayuliang is a remote Anjaw hill settlement overlooking the Lohit valley, useful for quiet borderland drives and raw eastern Himalayan landscapes.' }
 ];
 
+const holidifyArunachalPradeshExtendedSupplemental: Omit<Place, 'slug' | 'stateSlug' | 'verified'>[] = [
+  { name: 'Walong', state: 'Arunachal Pradesh', district: 'Anjaw', lat: 28.133, lng: 97.017, category: 'Hills', description: 'Walong is a remote Lohit valley town near the eastern border, known for bamboo landscapes, hot springs, war memorial history, and raw Himalayan roads.' },
+  { name: 'Kibithoo', state: 'Arunachal Pradesh', district: 'Anjaw', lat: 28.31, lng: 97.02, category: 'Hills', description: 'Kibithoo is one of India\'s easternmost inhabited settlements, reached beyond Walong through permit-based mountain roads, borderland valleys, and dramatic Lohit scenery.' },
+  { name: 'Talley Valley Wildlife Sanctuary', state: 'Arunachal Pradesh', district: 'Lower Subansiri', lat: 27.55, lng: 93.95, category: 'Wildlife', description: 'Talley Valley Wildlife Sanctuary near Ziro protects dense Eastern Himalayan forest, bamboo groves, orchids, birdlife, and biodiverse trails best explored with local guidance.' },
+  { name: 'Mayudia', state: 'Arunachal Pradesh', district: 'Lower Dibang Valley', lat: 28.23, lng: 95.88, category: 'Hills', description: 'Mayudia is a high hill resort above Roing, known for winter snowfall, misty forest roads, Dibang Valley views, treks, and cool mountain air.' }
+];
+
 const delhiTourismSupplemental: Omit<Place, 'slug' | 'stateSlug' | 'verified'>[] = [
   { name: 'Qutub Minar', state: 'Delhi', district: 'Delhi', lat: 28.5245, lng: 77.1855, category: 'Heritage', description: 'Qutub Minar is a UNESCO-listed Delhi monument, known for its soaring minaret, early Indo-Islamic stonework, and the surrounding Mehrauli ruins.' },
   { name: 'India Gate', state: 'Delhi', district: 'Delhi', lat: 28.6129, lng: 77.2295, category: 'Heritage', description: 'India Gate is Delhi\'s ceremonial war memorial, best experienced with a Central Vista walk, evening lights, and nearby museums or government landmarks.' },
@@ -1471,7 +1478,7 @@ function build(raw: Omit<Place, 'slug' | 'stateSlug' | 'verified'>[], verified: 
 
 export const PLACES: Place[] = [
   ...build([...rawKarnataka, ...holidifyKarnatakaSupplemental, ...trawellKarnatakaSupplemental], true),
-  ...build([...rawOtherStates, ...trawellTelanganaSupplemental, ...trawellMaharashtraSupplemental, ...trawellTamilNaduSupplemental, ...thrillophiliaAndhraPradeshSupplemental, ...holidifyArunachalPradeshSupplemental, ...delhiTourismSupplemental, ...trawellKeralaSupplemental, ...trawellMadhyaPradeshSupplemental, ...trawellWestBengalSupplemental, ...holidifyWestBengalSupplemental, ...holidifyGoaSupplemental, ...holidifyGoaExtendedSupplemental, ...thrillophiliaPunjabSupplemental, ...trawellRajasthanSupplemental, ...thrillophiliaBiharSupplemental, ...holidifyMeghalayaSupplemental, ...travelsetuNagalandSupplemental, ...holidifyAssamSupplemental, ...trawellGujaratSupplemental, ...thrillophiliaSikkimSupplemental], true)
+  ...build([...rawOtherStates, ...trawellTelanganaSupplemental, ...trawellMaharashtraSupplemental, ...trawellTamilNaduSupplemental, ...thrillophiliaAndhraPradeshSupplemental, ...holidifyArunachalPradeshSupplemental, ...holidifyArunachalPradeshExtendedSupplemental, ...delhiTourismSupplemental, ...trawellKeralaSupplemental, ...trawellMadhyaPradeshSupplemental, ...trawellWestBengalSupplemental, ...holidifyWestBengalSupplemental, ...holidifyGoaSupplemental, ...holidifyGoaExtendedSupplemental, ...thrillophiliaPunjabSupplemental, ...trawellRajasthanSupplemental, ...thrillophiliaBiharSupplemental, ...holidifyMeghalayaSupplemental, ...travelsetuNagalandSupplemental, ...holidifyAssamSupplemental, ...trawellGujaratSupplemental, ...thrillophiliaSikkimSupplemental], true)
 ];
 
 export function getStates() {
