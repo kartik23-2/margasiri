@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/components/LanguageProvider';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { isValidProfilePicture, PROFILE_PICTURES_BUCKET, profilePicturePath } from '@/lib/supabase/profilePictures';
 
 export default function EditProfileForm() {
+  const { tr } = useLanguage();
   const [name, setName] = useState('');
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -90,7 +92,7 @@ export default function EditProfileForm() {
         <input value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-lg border border-black/10 bg-white px-3 py-3 text-sm" />
       </label>
       <label className="mt-4 block">
-        <span className="mb-1 block text-xs uppercase tracking-wide opacity-50">Profile picture</span>
+        <span className="mb-1 block text-xs uppercase tracking-wide opacity-50">{tr('profilePicture')}</span>
         <input
           type="file"
           accept="image/*"
@@ -109,7 +111,7 @@ export default function EditProfileForm() {
         </div>
       )}
       <button type="submit" className="mt-5 rounded-lg bg-indigo px-5 py-3 text-sm font-semibold text-paper-light">
-        Save profile
+        {tr('saveProfile')}
       </button>
       {status && <p className="mt-3 text-sm opacity-70">{status}</p>}
     </form>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, Plus, Share2, Trash2 } from 'lucide-react';
+import { useLanguage } from '@/components/LanguageProvider';
 import { PLACES } from '@/lib/data/places';
 import { haversineKm } from '@/lib/geo';
 
@@ -43,6 +44,7 @@ function currentPosition(): Promise<GeolocationPosition | null> {
 }
 
 export default function TripPage() {
+  const { tr } = useLanguage();
   const [stops, setStops] = useState<TripStop[]>([]);
   const [q, setQ] = useState('');
   const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -109,8 +111,8 @@ export default function TripPage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-6">
       <section className="mb-6 rounded-3xl bg-indigo p-5 text-paper-light">
-        <p className="text-xs uppercase tracking-widest text-paper/60">Trip planner</p>
-        <h1 className="mt-2 font-display text-4xl">Build a multi-day route</h1>
+        <p className="text-xs uppercase tracking-widest text-paper/60">{tr('trip')}</p>
+        <h1 className="mt-2 font-display text-4xl">{tr('planTrip')}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-paper/75">
           String together hidden places, group them by day, estimate rough cost, and share the plan with someone before you travel.
         </p>
@@ -122,7 +124,7 @@ export default function TripPage() {
             <input
               value={q}
               onChange={(event) => setQ(event.target.value)}
-              placeholder="Search places to add..."
+              placeholder={tr('searchPlaceholder')}
               className="rounded-lg border border-black/15 bg-white px-3 py-3 text-sm"
             />
             <input

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
 
 const TRIP_KEY = 'margasiri:trip-plan';
@@ -25,6 +26,7 @@ export function addPlaceToTrip(place: Pick<Place, 'slug'>, day = 1) {
 
 export default function AddToTripButton({ place }: { place: Pick<Place, 'slug'> }) {
   const [added, setAdded] = useState(false);
+  const { tr } = useLanguage();
 
   return (
     <button
@@ -35,7 +37,7 @@ export default function AddToTripButton({ place }: { place: Pick<Place, 'slug'> 
       }}
       className="rounded-xl border border-indigo px-5 py-3 text-sm font-semibold text-indigo"
     >
-      {added ? 'Added to trip' : 'Add to trip'}
+      {added ? tr('addedToTrip') : tr('addToTrip')}
     </button>
   );
 }

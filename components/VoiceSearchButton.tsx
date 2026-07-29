@@ -2,6 +2,7 @@
 
 import { Mic, MicOff } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useLanguage } from '@/components/LanguageProvider';
 
 declare global {
   interface Window {
@@ -17,6 +18,7 @@ const languages = [
 ];
 
 export default function VoiceSearchButton({ onResult }: { onResult: (text: string) => void }) {
+  const { tr } = useLanguage();
   const [listening, setListening] = useState(false);
   const [language, setLanguage] = useState('en-IN');
   const [status, setStatus] = useState('');
@@ -25,7 +27,7 @@ export default function VoiceSearchButton({ onResult }: { onResult: (text: strin
   function start() {
     const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setStatus('Voice search is not supported in this browser.');
+      setStatus(tr('voiceUnsupported'));
       return;
     }
 
@@ -35,14 +37,14 @@ export default function VoiceSearchButton({ onResult }: { onResult: (text: strin
     recognition.maxAlternatives = 1;
     recognition.onstart = () => {
       setListening(true);
-      setStatus('Listening...');
+      setStatus(tr('listening'));
     };
     recognition.onresult = (event: any) => {
       const text = event.results?.[0]?.[0]?.transcript ?? '';
       if (text) onResult(text);
-      setStatus(text ? `Heard: ${text}` : 'No speech detected.');
+      setStatus(text ? `${tr('heard')}: ${text}` : 'No speech detected.');
     };
-    recognition.onerror = () => setStatus('Voice search stopped. Try again.');
+    recognition.onerror = () => setStatus(tr('voiceStopped'));
     recognition.onend = () => setListening(false);
     recognitionRef.current = recognition;
     recognition.start();
@@ -73,7 +75,7 @@ export default function VoiceSearchButton({ onResult }: { onResult: (text: strin
         className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ${listening ? 'bg-vermillion text-white' : 'bg-indigo text-paper-light'}`}
       >
         {listening ? <MicOff size={15} /> : <Mic size={15} />}
-        {listening ? 'Stop' : 'Voice search'}
+        {listening ? tr('stop') : tr('voiceSearch')}
       </button>
       {status && <p className="text-xs opacity-65">{status}</p>}
     </div>

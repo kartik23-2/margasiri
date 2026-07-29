@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/components/LanguageProvider';
 import PlaceCard from '@/components/PlaceCard';
 import { getPlaceCategories } from '@/lib/categories';
 import { getSeasonalCollections } from '@/lib/collections';
@@ -36,6 +37,7 @@ function Rail({ title, places, origin }: { title: string; places: PlaceWithDista
 }
 
 export default function HomePage() {
+  const { tr } = useLanguage();
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [tracking, setTracking] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('');
@@ -101,12 +103,12 @@ export default function HomePage() {
     <main className="pb-2">
       <section className="px-6 py-5">
         <div className="rounded-3xl bg-indigo p-5 text-paper-light shadow-xl">
-          <p className="text-xs uppercase tracking-widest text-paper/60">A field guide to the overlooked</p>
+          <p className="text-xs uppercase tracking-widest text-paper/60">{tr('fieldGuide')}</p>
           <h1 className="mt-2 font-display text-4xl leading-tight">
-            Find what is <span className="text-marigold">past the milestone.</span>
+            {tr('heroTitlePrefix')} <span className="text-marigold">{tr('heroTitleHighlight')}</span>
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-paper/75">
-            {PLACES.length}+ verified places across India, sorted by distance when live location is on.
+            {PLACES.length}+ {tr('heroCopy')}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <button
@@ -114,13 +116,13 @@ export default function HomePage() {
               onClick={toggleLocation}
               className="rounded-xl bg-vermillion px-5 py-3 text-sm font-semibold text-white"
             >
-              {tracking ? 'Live location on' : 'Turn on live location'}
+              {tracking ? tr('liveLocationOn') : tr('turnOnLocation')}
             </button>
             <Link href="/map" className="rounded-xl border border-paper/30 px-5 py-3 text-sm font-semibold">
-              Browse map
+              {tr('browseMap')}
             </Link>
             <Link href="/trip" className="rounded-xl border border-paper/30 px-5 py-3 text-sm font-semibold">
-              Plan trip
+              {tr('planTrip')}
             </Link>
           </div>
         </div>
@@ -146,8 +148,8 @@ export default function HomePage() {
 
       <section className="mb-9">
         <div className="mb-3 flex items-center justify-between px-6">
-          <h2 className="font-display text-2xl">Seasonal collections</h2>
-          <Link href="/collections" className="text-xs font-semibold text-indigo">See all</Link>
+          <h2 className="font-display text-2xl">{tr('seasonalCollections')}</h2>
+          <Link href="/collections" className="text-xs font-semibold text-indigo">{tr('seeAll')}</Link>
         </div>
         <div className="flex snap-x gap-4 overflow-x-auto px-6 pb-2">
           {collections.map((collection) => (
@@ -165,12 +167,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Rail title={origin ? 'Nearest to you' : 'Turn on location for nearest places'} places={nearest} origin={origin} />
+      <Rail title={origin ? tr('nearestToYou') : tr('turnOnNearest')} places={nearest} origin={origin} />
       <Rail title={activeCategory ? `${activeCategory} picks` : ''} places={categoryFeed} origin={origin} />
-      <Rail title="Karnataka picks" places={karnatakaPicks} origin={origin} />
-      <Rail title="For history lovers" places={history} origin={origin} />
-      <Rail title="Into the wild" places={wild} origin={origin} />
-      <Rail title="Coastal escapes" places={coast} origin={origin} />
+      <Rail title={tr('karnatakaPicks')} places={karnatakaPicks} origin={origin} />
+      <Rail title={tr('historyLovers')} places={history} origin={origin} />
+      <Rail title={tr('intoWild')} places={wild} origin={origin} />
+      <Rail title={tr('coastalEscapes')} places={coast} origin={origin} />
     </main>
   );
 }

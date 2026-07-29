@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
 import { getPlaceCategories } from '@/lib/categories';
 import { externalDirectionsUrl } from '@/lib/geo';
@@ -10,6 +13,7 @@ interface Props {
 }
 
 export default function PlaceCard({ place, origin, compact = false }: Props) {
+  const { tr } = useLanguage();
   const img = `https://picsum.photos/seed/${place.slug}/640/480`;
   const categories = getPlaceCategories(place).slice(0, compact ? 2 : 3);
 
@@ -28,16 +32,16 @@ export default function PlaceCard({ place, origin, compact = false }: Props) {
           {place.distanceKm != null ? (
             <span className="font-mono text-xs font-semibold text-vermillion">↗ {place.distanceKm} km</span>
           ) : (
-            <span className="font-mono text-xs text-black/40">↗ turn on location</span>
+            <span className="font-mono text-xs text-black/40">↗ {tr('turnOnLocationShort')}</span>
           )}
         </div>
         <Link href={`/place/${place.slug}`} className="font-display text-lg leading-tight">
           {place.name}
           {place.state === 'Karnataka' && (
-            <span className="ml-2 align-middle text-[9px] bg-pine text-white px-2 py-0.5 rounded-full">★ KA</span>
+            <span className="ml-2 align-middle text-[9px] bg-pine text-white px-2 py-0.5 rounded-full">KA</span>
           )}
         </Link>
-        <p className="text-xs text-black/60 -mt-1">{place.district} District, {place.state}</p>
+        <p className="text-xs text-black/60 -mt-1">{place.district} {tr('district')}, {place.state}</p>
         <p className="text-[13px] leading-relaxed opacity-85 flex-1">{place.description}</p>
         <div className="flex gap-2 mt-2">
           <a
@@ -46,13 +50,13 @@ export default function PlaceCard({ place, origin, compact = false }: Props) {
             rel="noopener noreferrer"
             className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-indigo text-paper-light"
           >
-            Directions
+            {tr('directions')}
           </a>
           <Link
             href={`/place/${place.slug}`}
             className="flex-1 text-center text-xs font-semibold py-2 rounded-lg border border-indigo text-indigo"
           >
-            Details
+            {tr('details')}
           </Link>
         </div>
       </div>

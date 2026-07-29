@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SlidersHorizontal } from 'lucide-react';
 import FilterSheet from '@/components/FilterSheet';
+import { useLanguage } from '@/components/LanguageProvider';
 import PlaceCard from '@/components/PlaceCard';
 import VoiceSearchButton from '@/components/VoiceSearchButton';
 import { getPlaceCategories } from '@/lib/categories';
@@ -13,6 +14,7 @@ import { haversineKm } from '@/lib/geo';
 import { saveLastLocation } from '@/lib/lastLocation';
 
 function ExploreContent() {
+  const { tr } = useLanguage();
   const searchParams = useSearchParams();
   const [q, setQ] = useState('');
   const [stateFilter, setStateFilter] = useState('');
@@ -70,8 +72,8 @@ function ExploreContent() {
     <main className="mx-auto max-w-6xl px-6 py-6">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-widest opacity-50">Browse</p>
-          <h1 className="font-display text-3xl">Explore</h1>
+          <p className="text-xs uppercase tracking-widest opacity-50">{tr('browse')}</p>
+          <h1 className="font-display text-3xl">{tr('explore')}</h1>
         </div>
         <button
           type="button"
@@ -79,7 +81,7 @@ function ExploreContent() {
           className="flex items-center gap-2 rounded-xl bg-indigo px-4 py-3 text-sm font-semibold text-paper-light"
         >
           <SlidersHorizontal size={16} />
-          Filters
+          {tr('filters')}
         </button>
       </div>
 
@@ -87,7 +89,7 @@ function ExploreContent() {
         <input
           value={q}
           onChange={(event) => setQ(event.target.value)}
-          placeholder="Search by place, district or state..."
+          placeholder={tr('searchPlaceholder')}
           className="w-full rounded-lg border border-black/10 bg-white px-3 py-3 text-sm"
         />
         <VoiceSearchButton onResult={setQ} />
@@ -102,8 +104,8 @@ function ExploreContent() {
       )}
 
       <p className="mb-4 text-xs opacity-60">
-        {filtered.length} of {PLACES.length} places
-        {(stateFilter || categoryFilters.length > 0) && ` - ${categoryFilters.length + (stateFilter ? 1 : 0)} filters active`}
+        {filtered.length} of {PLACES.length} {tr('places')}
+        {(stateFilter || categoryFilters.length > 0) && ` - ${categoryFilters.length + (stateFilter ? 1 : 0)} ${tr('filtersActive')}`}
       </p>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -113,7 +115,7 @@ function ExploreContent() {
       </div>
 
       {filtered.length === 0 && (
-        <p className="py-16 text-center text-sm opacity-60">Nothing matches that search yet. Try a different state or keyword.</p>
+        <p className="py-16 text-center text-sm opacity-60">{tr('nothingMatches')}</p>
       )}
 
       <FilterSheet

@@ -2,16 +2,17 @@
 
 import { usePathname } from 'next/navigation';
 import BottomTabBar from '@/components/BottomTabBar';
+import { LanguageProvider } from '@/components/LanguageProvider';
 import TopAppBar from '@/components/TopAppBar';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <>
+    <LanguageProvider>
       <TopAppBar />
       <div className="pb-24">{children}</div>
       <BottomTabBar />
-    </>
+    </LanguageProvider>
   );
 }

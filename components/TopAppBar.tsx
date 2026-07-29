@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { Bell, UserCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { LanguageSwitcher, useLanguage } from '@/components/LanguageProvider';
 
 export default function TopAppBar() {
   const pathname = usePathname();
+  const { tr } = useLanguage();
 
   return (
     <header className="sticky top-0 z-40 border-b border-black/10 bg-paper/95 px-4 py-3 backdrop-blur">
@@ -17,10 +19,11 @@ export default function TopAppBar() {
           Margasiri
         </Link>
         <div className="flex items-center gap-2">
-          <button type="button" className="rounded-full border border-black/10 bg-paper-light p-2" aria-label="Notifications">
+          <LanguageSwitcher />
+          <button type="button" className="rounded-full border border-black/10 bg-paper-light p-2" aria-label={tr('notifications')}>
             <Bell size={18} />
           </button>
-          <Link href="/profile" className="rounded-full border border-black/10 bg-paper-light p-2" aria-label="Profile">
+          <Link href="/profile" className="rounded-full border border-black/10 bg-paper-light p-2" aria-label={tr('profile')}>
             <UserCircle size={18} />
           </Link>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
 
 interface WeatherDay {
@@ -22,6 +23,7 @@ function daysFromToday(date: string) {
 }
 
 export default function WeatherPlanner({ place, fallback }: { place: Place; fallback: string }) {
+  const { tr } = useLanguage();
   const [date, setDate] = useState(todayIso());
   const [status, setStatus] = useState('Choose a date to check forecast.');
   const [forecast, setForecast] = useState<{ high?: number; low?: number; rain?: number; mm?: number } | null>(null);
@@ -68,7 +70,7 @@ export default function WeatherPlanner({ place, fallback }: { place: Place; fall
 
   return (
     <article className="rounded-xl border border-black/10 bg-paper-light p-5">
-      <p className="mb-2 text-xs uppercase tracking-wide opacity-50">Weather planner</p>
+      <p className="mb-2 text-xs uppercase tracking-wide opacity-50">{tr('weatherPlanner')}</p>
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="date"

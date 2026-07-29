@@ -38,6 +38,7 @@ Use a MapLibre-compatible OpenStreetMap-data style from MapTiler, Stadia Maps, G
 - Place weather planner uses Open-Meteo's no-key forecast endpoint for dates in the next 16 days, then falls back to seasonal travel guidance.
 - Seasonal curated collections are available on `/collections` and feed `/explore?collection=...`.
 - Explore supports browser voice search in English, Hindi, and Kannada where the browser Speech Recognition API is available.
+- A top-bar language switcher persists English, Hindi, and Kannada in local storage and translates the main navigation, Home, Explore, cards, trip controls, profile controls, and place-page utility labels.
 - Place pages show "Places like this" recommendations using category, district, and state similarity.
 - Amenity, transport, and SOS sections include direct Google Maps searches for nearby services.
 
@@ -122,8 +123,8 @@ lib/
 
 ## Language Status
 
-- UI dictionary (`lib/i18n.ts`) has English, Hindi, and Kannada strings, but hardcoded page text still needs to be fully wired into that dictionary.
-- Place descriptions are English-only. The Prisma schema has a `PlaceTranslation` model ready for translated content.
+- Main app UI now switches between English, Hindi, and Kannada through the top-bar language selector.
+- Place names and long descriptions are still authored in English. The Prisma schema has a `PlaceTranslation` model ready for translated content when full destination-copy translation is added.
 
 ## Deploying
 

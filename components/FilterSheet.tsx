@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/components/LanguageProvider';
 import { CATEGORY_OPTIONS } from '@/lib/categories';
 
 interface StateOption {
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function FilterSheet({ open, states, stateFilter, categoryFilters, onClose, onApply }: Props) {
+  const { tr } = useLanguage();
   const [draftState, setDraftState] = useState(stateFilter);
   const [draftCategories, setDraftCategories] = useState<string[]>(categoryFilters);
 
@@ -44,8 +46,8 @@ export default function FilterSheet({ open, states, stateFilter, categoryFilters
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-black/20" />
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest opacity-50">Explore</p>
-            <h2 className="font-display text-3xl">Filters</h2>
+            <p className="text-xs uppercase tracking-widest opacity-50">{tr('explore')}</p>
+            <h2 className="font-display text-3xl">{tr('filters')}</h2>
           </div>
           <button type="button" onClick={onClose} className="rounded-full border border-black/10 bg-paper p-2" aria-label="Close">
             <X size={18} />
@@ -53,14 +55,14 @@ export default function FilterSheet({ open, states, stateFilter, categoryFilters
         </div>
 
         <div className="mb-6">
-          <p className="mb-3 text-xs uppercase tracking-widest opacity-50">State</p>
+          <p className="mb-3 text-xs uppercase tracking-widest opacity-50">{tr('state')}</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setDraftState('')}
               className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${!draftState ? 'border-indigo bg-indigo text-paper-light' : 'border-black/10 bg-white'}`}
             >
-              All states
+              {tr('allStates')}
             </button>
             {states.map((state) => (
               <button
@@ -76,7 +78,7 @@ export default function FilterSheet({ open, states, stateFilter, categoryFilters
         </div>
 
         <div>
-          <p className="mb-3 text-xs uppercase tracking-widest opacity-50">Categories</p>
+          <p className="mb-3 text-xs uppercase tracking-widest opacity-50">{tr('categories')}</p>
           <div className="flex flex-wrap gap-2">
             {CATEGORY_OPTIONS.map((category) => {
               const active = draftCategories.includes(category);
@@ -100,7 +102,7 @@ export default function FilterSheet({ open, states, stateFilter, categoryFilters
             onClick={() => onApply({ state: draftState, categories: draftCategories })}
             className="w-full rounded-xl bg-vermillion px-5 py-3 text-sm font-semibold text-white"
           >
-            Show results
+            {tr('showResults')}
           </button>
         </div>
       </section>

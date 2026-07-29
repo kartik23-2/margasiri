@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import AddToTripButton from '@/components/AddToTripButton';
 import BackButton from '@/components/BackButton';
 import GoogleDirectionsLink from '@/components/GoogleDirectionsLink';
+import { T } from '@/components/LanguageProvider';
 import PlaceCard from '@/components/PlaceCard';
 import WeatherPlanner from '@/components/WeatherPlanner';
 import { getPlaceCategories } from '@/lib/categories';
@@ -53,11 +54,11 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
               </span>
             ))}
             <span className="text-[10px] uppercase tracking-wide bg-pine text-white px-2 py-1 rounded-full">
-              {place.verified ? 'Verified' : 'Community-submitted, unverified'}
+              {place.verified ? <T k="verified" /> : <T k="communitySubmitted" />}
             </span>
           </div>
           <h1 className="font-display text-4xl md:text-5xl leading-tight mb-2">{place.name}</h1>
-          <p className="opacity-60 text-sm mb-6">{place.district} District, {place.state}</p>
+          <p className="opacity-60 text-sm mb-6">{place.district} <T k="district" />, {place.state}</p>
           <p className="text-[15px] leading-relaxed opacity-85 mb-6">{details.howItIs}</p>
           <div className="flex flex-wrap gap-2 mb-6">
             {details.idealFor.map((item) => (
@@ -75,11 +76,11 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
 
       <section className="grid md:grid-cols-2 gap-4 mb-8">
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
-          <p className="text-xs uppercase tracking-wide opacity-50 mb-2">When to visit</p>
+          <p className="text-xs uppercase tracking-wide opacity-50 mb-2"><T k="whenToVisit" /></p>
           <p className="text-sm leading-relaxed opacity-85">{details.bestTimeToVisit}</p>
         </article>
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
-          <p className="text-xs uppercase tracking-wide opacity-50 mb-2">How to reach</p>
+          <p className="text-xs uppercase tracking-wide opacity-50 mb-2"><T k="howToReach" /></p>
           <p className="text-sm leading-relaxed opacity-85">{details.howToReach}</p>
         </article>
       </section>
@@ -87,7 +88,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
       <section className="mb-8 grid gap-4 lg:grid-cols-[1fr_0.8fr]">
         <WeatherPlanner place={place} fallback={travel.weatherFallback} />
         <article className="rounded-xl border border-black/10 bg-paper-light p-5">
-          <p className="mb-2 text-xs uppercase tracking-wide opacity-50">Trip readiness</p>
+          <p className="mb-2 text-xs uppercase tracking-wide opacity-50"><T k="tripReadiness" /></p>
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full bg-indigo px-3 py-1 text-xs font-semibold text-paper-light">{travel.remoteness}</span>
             {travel.safety.slice(0, 2).map((item) => (
@@ -103,8 +104,8 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
       <section className="mb-8">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-widest opacity-50">Nearby utilities</p>
-            <h2 className="font-display text-3xl">Plan the practical bits</h2>
+            <p className="text-xs uppercase tracking-widest opacity-50"><T k="nearbyUtilities" /></p>
+            <h2 className="font-display text-3xl"><T k="planPracticalBits" /></h2>
           </div>
           <AddToTripButton place={place} />
         </div>
@@ -116,7 +117,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
               <p className="mt-2 text-sm leading-relaxed opacity-75">{item.note}</p>
               {item.query && (
                 <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-semibold text-indigo">
-                  Search nearby
+                  <T k="searchNearby" />
                 </a>
               )}
             </article>
@@ -126,7 +127,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
 
       <section className="mb-8 grid gap-4 lg:grid-cols-3">
         <article className="rounded-xl border border-black/10 bg-paper-light p-5">
-          <p className="mb-4 text-xs uppercase tracking-wide opacity-50">Public transport</p>
+          <p className="mb-4 text-xs uppercase tracking-wide opacity-50"><T k="publicTransport" /></p>
           <div className="space-y-4">
             {travel.publicTransport.map((item) => (
               <div key={item.label}>
@@ -134,7 +135,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
                 <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
                 {item.query && (
                   <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-indigo">
-                    Find on map
+                    <T k="findOnMap" />
                   </a>
                 )}
               </div>
@@ -142,7 +143,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
           </div>
         </article>
         <article className="rounded-xl border border-vermillion/25 bg-paper-light p-5">
-          <p className="mb-4 text-xs uppercase tracking-wide text-vermillion">SOS and emergency</p>
+          <p className="mb-4 text-xs uppercase tracking-wide text-vermillion"><T k="sosEmergency" /></p>
           <div className="space-y-4">
             {travel.emergency.map((item) => (
               <div key={item.label}>
@@ -150,7 +151,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
                 <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
                 {item.query && (
                   <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-indigo">
-                    Find nearest
+                    <T k="findNearest" />
                   </a>
                 )}
               </div>
@@ -158,7 +159,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
           </div>
         </article>
         <article className="rounded-xl border border-black/10 bg-paper-light p-5">
-          <p className="mb-4 text-xs uppercase tracking-wide opacity-50">Rough cost estimator</p>
+          <p className="mb-4 text-xs uppercase tracking-wide opacity-50"><T k="roughCostEstimator" /></p>
           <div className="space-y-4">
             {travel.costs.map((item) => (
               <div key={item.label}>
@@ -172,8 +173,8 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
 
       <section className="mb-8">
         <div className="mb-4">
-          <p className="text-xs uppercase tracking-widest opacity-50">Personalized discovery</p>
-          <h2 className="font-display text-3xl">Places like this</h2>
+          <p className="text-xs uppercase tracking-widest opacity-50"><T k="personalizedDiscovery" /></p>
+          <h2 className="font-display text-3xl"><T k="placesLikeThis" /></h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {similarPlaces.map((similar) => <PlaceCard key={similar.slug} place={similar} compact />)}
@@ -182,7 +183,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
 
       <section className="grid lg:grid-cols-[1fr_0.85fr] gap-4 mb-8">
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
-          <p className="text-xs uppercase tracking-wide opacity-50 mb-4">What to do there</p>
+          <p className="text-xs uppercase tracking-wide opacity-50 mb-4"><T k="whatToDoThere" /></p>
           <div className="grid sm:grid-cols-3 gap-3">
             {details.thingsToDo.map((item) => (
               <div key={item} className="border border-black/10 rounded-lg p-3 bg-paper/50">
@@ -192,7 +193,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
           </div>
         </article>
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
-          <p className="text-xs uppercase tracking-wide opacity-50 mb-4">Travel notes</p>
+          <p className="text-xs uppercase tracking-wide opacity-50 mb-4"><T k="travelNotes" /></p>
           <ul className="space-y-3">
             {details.travelTips.map((tip) => (
               <li key={tip} className="text-sm leading-relaxed opacity-85">
@@ -205,19 +206,19 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-paper-light border border-black/10 rounded-xl p-4">
-          <p className="text-xs opacity-60 mb-1">Coordinates</p>
+          <p className="text-xs opacity-60 mb-1"><T k="coordinates" /></p>
           <p className="font-mono text-sm">{place.lat.toFixed(4)}, {place.lng.toFixed(4)}</p>
         </div>
         <div className="bg-paper-light border border-black/10 rounded-xl p-4">
-          <p className="text-xs opacity-60 mb-1">State</p>
+          <p className="text-xs opacity-60 mb-1"><T k="state" /></p>
           <p className="text-sm font-medium">{place.state}</p>
         </div>
         <div className="bg-paper-light border border-black/10 rounded-xl p-4">
-          <p className="text-xs opacity-60 mb-1">District</p>
+          <p className="text-xs opacity-60 mb-1"><T k="district" /></p>
           <p className="text-sm font-medium">{place.district}</p>
         </div>
         <div className="bg-paper-light border border-black/10 rounded-xl p-4">
-          <p className="text-xs opacity-60 mb-1">Category</p>
+          <p className="text-xs opacity-60 mb-1"><T k="category" /></p>
           <p className="text-sm font-medium">{place.category}</p>
         </div>
       </section>

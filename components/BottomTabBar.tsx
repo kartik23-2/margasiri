@@ -3,14 +3,15 @@
 import Link from 'next/link';
 import { Bookmark, CalendarDays, Compass, Home, Map, UserCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useLanguage } from '@/components/LanguageProvider';
 
 const tabs = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/explore', label: 'Explore', icon: Compass },
-  { href: '/map', label: 'Map', icon: Map },
-  { href: '/trip', label: 'Trip', icon: CalendarDays },
-  { href: '/saved', label: 'Saved', icon: Bookmark },
-  { href: '/profile', label: 'Profile', icon: UserCircle }
+  { href: '/', labelKey: 'home', icon: Home },
+  { href: '/explore', labelKey: 'explore', icon: Compass },
+  { href: '/map', labelKey: 'map', icon: Map },
+  { href: '/trip', labelKey: 'trip', icon: CalendarDays },
+  { href: '/saved', labelKey: 'saved', icon: Bookmark },
+  { href: '/profile', labelKey: 'profile', icon: UserCircle }
 ];
 
 function isActive(pathname: string, href: string) {
@@ -20,6 +21,7 @@ function isActive(pathname: string, href: string) {
 
 export default function BottomTabBar() {
   const pathname = usePathname();
+  const { tr } = useLanguage();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-paper/10 bg-indigo px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 text-paper-light shadow-2xl">
@@ -36,7 +38,7 @@ export default function BottomTabBar() {
               }`}
             >
               <Icon size={21} strokeWidth={active ? 2.8 : 2.1} />
-              <span>{tab.label}</span>
+              <span>{tr(tab.labelKey)}</span>
             </Link>
           );
         })}

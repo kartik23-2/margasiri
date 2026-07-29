@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/components/LanguageProvider';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export function ShareAppButton() {
+  const { tr } = useLanguage();
   const [status, setStatus] = useState('');
 
   async function share() {
@@ -25,7 +27,7 @@ export function ShareAppButton() {
 
   return (
     <button type="button" onClick={share} className="w-full text-left">
-      <span className="font-semibold">Share app</span>
+      <span className="font-semibold">{tr('shareApp')}</span>
       <span className="block text-xs opacity-60">{status || 'Send Margasiri to a friend'}</span>
     </button>
   );
@@ -33,6 +35,7 @@ export function ShareAppButton() {
 
 export function LogoutButton() {
   const router = useRouter();
+  const { tr } = useLanguage();
 
   async function logout() {
     const supabase = createSupabaseBrowserClient();
@@ -43,7 +46,7 @@ export function LogoutButton() {
 
   return (
     <button type="button" onClick={logout} className="w-full text-left">
-      <span className="font-semibold">Logout</span>
+      <span className="font-semibold">{tr('logout')}</span>
       <span className="block text-xs opacity-60">Sign out of this device</span>
     </button>
   );
