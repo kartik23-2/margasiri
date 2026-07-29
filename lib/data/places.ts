@@ -1132,6 +1132,15 @@ const thrillophiliaBiharSupplemental: Omit<Place, 'slug' | 'stateSlug' | 'verifi
   { name: 'Ghora Katora Lake, Rajgir', state: 'Bihar', district: 'Nalanda', lat: 25.0007, lng: 85.462, category: 'Wilderness', description: 'Ghora Katora Lake is a peaceful hill-ringed Rajgir lake reached by eco-friendly transport, with boating, Buddha statue views, birds, and sunset calm.' }
 ];
 
+const holidifyBiharSupplemental: Omit<Place, 'slug' | 'stateSlug' | 'verified'>[] = [
+  { name: 'Madhubani', state: 'Bihar', district: 'Madhubani', lat: 26.3483, lng: 86.0712, category: 'Heritage', description: 'Madhubani is the heart of Mithila art and culture, known for folk painting traditions, temples, markets, Maithili identity, and rural cultural routes.' },
+  { name: 'Pawapuri', state: 'Bihar', district: 'Nalanda', lat: 25.092, lng: 85.538, category: 'Spiritual', description: 'Pawapuri is a sacred Jain pilgrimage town associated with Lord Mahavira, known for Jal Mandir, lotus ponds, marble shrines, and quiet devotional walks.' },
+  { name: 'Hajipur', state: 'Bihar', district: 'Vaishali', lat: 25.692, lng: 85.208, category: 'Heritage', description: 'Hajipur is a Ganga-Gandak confluence city near Patna, linked with Vaishali history, temples, river bridges, local markets, and Sonepur routes.' },
+  { name: 'Lauriya Nandangarh', state: 'Bihar', district: 'West Champaran', lat: 26.983, lng: 84.4, category: 'Heritage', description: 'Lauriya Nandangarh is an archaeological site near Bettiah, famous for its Ashokan pillar, ancient stupa mounds, Mauryan history, and rural heritage setting.' },
+  { name: 'Chhat Puja', state: 'Bihar', district: 'Patna', lat: 25.610, lng: 85.141, category: 'Spiritual', description: 'Chhat Puja is Bihar\'s iconic Sun worship festival, best experienced at river ghats with devotional songs, offerings, sunrise rituals, and community gatherings.' },
+  { name: 'Mundeshwari Temple', state: 'Bihar', district: 'Kaimur', lat: 24.983, lng: 83.564, category: 'Spiritual', description: 'Mundeshwari Temple in Kaimur is among India\'s oldest living temples, dedicated to Shiva and Shakti, with rare octagonal stone architecture and hill views.' }
+];
+
 const holidifyMeghalayaSupplemental: Omit<Place, 'slug' | 'stateSlug' | 'verified'>[] = [
   { name: 'Shillong', state: 'Meghalaya', district: 'East Khasi Hills', lat: 25.5788, lng: 91.8933, category: 'Hills', description: 'Shillong is Meghalaya\'s pine-clad capital, known for Umiam Lake, Elephant Falls, Shillong Peak, cafes, markets, colonial-era neighborhoods, and Khasi culture.' },
   { name: 'Mawsynram', state: 'Meghalaya', district: 'East Khasi Hills', lat: 25.299, lng: 91.582, category: 'Hills', description: 'Mawsynram is one of Earth\'s wettest places, with dramatic clouds, limestone caves, green ridges, waterfalls, village trails, and monsoon-shaped landscapes.' },
@@ -1478,7 +1487,7 @@ function build(raw: Omit<Place, 'slug' | 'stateSlug' | 'verified'>[], verified: 
 
 export const PLACES: Place[] = [
   ...build([...rawKarnataka, ...holidifyKarnatakaSupplemental, ...trawellKarnatakaSupplemental], true),
-  ...build([...rawOtherStates, ...trawellTelanganaSupplemental, ...trawellMaharashtraSupplemental, ...trawellTamilNaduSupplemental, ...thrillophiliaAndhraPradeshSupplemental, ...holidifyArunachalPradeshSupplemental, ...holidifyArunachalPradeshExtendedSupplemental, ...delhiTourismSupplemental, ...trawellKeralaSupplemental, ...trawellMadhyaPradeshSupplemental, ...trawellWestBengalSupplemental, ...holidifyWestBengalSupplemental, ...holidifyGoaSupplemental, ...holidifyGoaExtendedSupplemental, ...thrillophiliaPunjabSupplemental, ...trawellRajasthanSupplemental, ...thrillophiliaBiharSupplemental, ...holidifyMeghalayaSupplemental, ...travelsetuNagalandSupplemental, ...holidifyAssamSupplemental, ...trawellGujaratSupplemental, ...thrillophiliaSikkimSupplemental], true)
+  ...build([...rawOtherStates, ...trawellTelanganaSupplemental, ...trawellMaharashtraSupplemental, ...trawellTamilNaduSupplemental, ...thrillophiliaAndhraPradeshSupplemental, ...holidifyArunachalPradeshSupplemental, ...holidifyArunachalPradeshExtendedSupplemental, ...delhiTourismSupplemental, ...trawellKeralaSupplemental, ...trawellMadhyaPradeshSupplemental, ...trawellWestBengalSupplemental, ...holidifyWestBengalSupplemental, ...holidifyGoaSupplemental, ...holidifyGoaExtendedSupplemental, ...thrillophiliaPunjabSupplemental, ...trawellRajasthanSupplemental, ...thrillophiliaBiharSupplemental, ...holidifyBiharSupplemental, ...holidifyMeghalayaSupplemental, ...travelsetuNagalandSupplemental, ...holidifyAssamSupplemental, ...trawellGujaratSupplemental, ...thrillophiliaSikkimSupplemental], true)
 ];
 
 export function getStates() {
