@@ -9,6 +9,19 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'profile_pictures',
+  'profile_pictures',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
 create table if not exists public.saved_places (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -73,6 +86,34 @@ create policy "Users submit own contributions" on public.contributions for inser
 
 create policy "Anyone can read categories" on public.categories for select using (true);
 create policy "Anyone can read place category links" on public.place_category_links for select using (true);
+
+create policy "Users read own profile pictures"
+on storage.objects for select
+using (
+  bucket_id = 'profile_pictures'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+create policy "Users upload own profile pictures"
+on storage.objects for insert
+with check (
+  bucket_id = 'profile_pictures'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+create policy "Users update own profile pictures"
+on storage.objects for update
+using (
+  bucket_id = 'profile_pictures'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+create policy "Users delete own profile pictures"
+on storage.objects for delete
+using (
+  bucket_id = 'profile_pictures'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
 
 insert into public.categories (name, slug) values
   ('Adventure', 'adventure'),

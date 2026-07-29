@@ -2,8 +2,10 @@ import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import PlaceCard from '@/components/PlaceCard';
 import { PLACES } from '@/lib/data/places';
+import { PROFILE_PICTURES_BUCKET } from '@/lib/supabase/profilePictures';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
+type ProfileRow = { name: string | null; email: string | null; image: string | null };
 type SavedRow = { place_slug: string; created_at?: string };
 type VisitedRow = { place_slug: string; visited_on?: string | null; created_at?: string };
 type ContributionRow = { id: string; place_slug: string; type: string; description: string; status: string; created_at: string };
@@ -50,11 +52,13 @@ export default async function ProfilePage() {
     );
   }
 
+  const { data: profile } = await supabase.from('profiles').select('name, email, image').eq('id', user.id).maybeSingle<ProfileRow>();
+
   await supabase.from('profiles').upsert({
     id: user.id,
-    name: user.user_metadata?.name ?? user.email,
+    name: profile?.name ?? user.user_metadata?.name ?? user.email,
     email: user.email,
-    image: user.user_metadata?.avatar_url
+    image: profile?.image ?? user.user_metadata?.avatar_path ?? null
   });
 
   const [{ data: saved }, { data: visited }, { data: contributions }] = await Promise.all([
@@ -65,13 +69,18 @@ export default async function ProfilePage() {
 
   const savedPlaces = placesFromRows((saved ?? []) as SavedRow[]);
   const visitedPlaces = placesFromRows((visited ?? []) as VisitedRow[]);
+  const imagePath = profile?.image ?? user.user_metadata?.avatar_path;
+  const avatarUrl = imagePath
+    ? (await supabase.storage.from(PROFILE_PICTURES_BUCKET).createSignedUrl(imagePath, 3600)).data?.signedUrl
+    : null;
+  const displayName = profile?.name ?? user.user_metadata?.name ?? user.email;
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <section className="mb-8 rounded-2xl bg-indigo p-6 text-paper-light">
         <div className="flex flex-wrap items-center gap-5">
-          {user.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="" className="h-20 w-20 rounded-full border-4 border-paper object-cover" />
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full border-4 border-paper object-cover" />
           ) : (
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-paper text-2xl font-semibold text-indigo">
               {(user.email ?? 'M').slice(0, 1).toUpperCase()}
@@ -79,7 +88,7 @@ export default async function ProfilePage() {
           )}
           <div>
             <p className="text-xs uppercase tracking-widest opacity-60">Your Margasiri profile</p>
-            <h1 className="font-display text-4xl">{user.user_metadata?.name ?? user.email}</h1>
+            <h1 className="font-display text-4xl">{displayName}</h1>
             <p className="mt-1 text-sm opacity-75">Joined {new Date(user.created_at).toLocaleDateString()}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">

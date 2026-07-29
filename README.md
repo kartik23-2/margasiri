@@ -31,6 +31,7 @@ Use a MapLibre-compatible OpenStreetMap-data style from MapTiler, Stadia Maps, G
 - First-class `/map` tab with clustered pins for all places.
 - Multi-day `/trip` planner with local itinerary storage, day ordering, trip sharing/check-in copy, and rough cost summary.
 - `/saved`, `/profile`, settings, Google sign-in, and email/password auth flows.
+- Profile pictures upload to the Supabase Storage bucket `profile_pictures`; `profiles.image` stores the object path, not an external URL.
 - Map browsing through MapLibre GL JS.
 - Place details use a simple external Google Maps directions link.
 - Place details include AI-generated utility notes for petrol, ATMs, hospitals, mobile network, public transport, emergency contacts, safety, and typical costs.
@@ -86,7 +87,8 @@ The Map tab and Profile Map are separate from navigation. They use MapLibre GL J
    SUPABASE_SERVICE_ROLE_KEY=""
    ```
 3. Run `supabase/schema.sql` in the Supabase SQL editor to create profile, saved, visited, contribution, and RLS tables.
-4. Enable Google in Supabase Auth Providers if using Google sign-in.
+4. Create or let the SQL create the private Storage bucket `profile_pictures`; users can upload/read/delete only inside their own user-id folder.
+5. Enable Google in Supabase Auth Providers if using Google sign-in.
 
 ## Project Structure
 
