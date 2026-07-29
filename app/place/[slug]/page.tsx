@@ -2,11 +2,18 @@ import { notFound } from 'next/navigation';
 import AddToTripButton from '@/components/AddToTripButton';
 import BackButton from '@/components/BackButton';
 import GoogleDirectionsLink from '@/components/GoogleDirectionsLink';
+import PlaceCard from '@/components/PlaceCard';
 import WeatherPlanner from '@/components/WeatherPlanner';
 import { getPlaceCategories } from '@/lib/categories';
+import { getSimilarPlaces } from '@/lib/collections';
 import { PLACES, getPlaceBySlug } from '@/lib/data/places';
 import { getPlaceDetails } from '@/lib/placeDetails';
 import { getTravelIntelligence } from '@/lib/tripPlanning';
+
+function nearbySearchUrl(place: { lat: number; lng: number }, query: string) {
+  const q = encodeURIComponent(`${query} near ${place.lat},${place.lng}`);
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
 
 export function generateStaticParams() {
   return PLACES.map((p) => ({ slug: p.slug }));
@@ -29,6 +36,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
   const details = getPlaceDetails(place);
   const categories = getPlaceCategories(place);
   const travel = getTravelIntelligence(place);
+  const similarPlaces = getSimilarPlaces(place);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-6 pb-36">
@@ -106,6 +114,11 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
               <p className="text-xs uppercase tracking-wide opacity-50">{item.label}</p>
               <p className="mt-1 font-semibold">{item.value}</p>
               <p className="mt-2 text-sm leading-relaxed opacity-75">{item.note}</p>
+              {item.query && (
+                <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-semibold text-indigo">
+                  Search nearby
+                </a>
+              )}
             </article>
           ))}
         </div>
@@ -119,6 +132,11 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
               <div key={item.label}>
                 <p className="text-sm font-semibold">{item.label}: {item.value}</p>
                 <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
+                {item.query && (
+                  <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-indigo">
+                    Find on map
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -130,6 +148,11 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
               <div key={item.label}>
                 <p className="text-sm font-semibold">{item.label}: {item.value}</p>
                 <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
+                {item.query && (
+                  <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-indigo">
+                    Find nearest
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -145,6 +168,16 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="mb-8">
+        <div className="mb-4">
+          <p className="text-xs uppercase tracking-widest opacity-50">Personalized discovery</p>
+          <h2 className="font-display text-3xl">Places like this</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {similarPlaces.map((similar) => <PlaceCard key={similar.slug} place={similar} compact />)}
+        </div>
       </section>
 
       <section className="grid lg:grid-cols-[1fr_0.85fr] gap-4 mb-8">

@@ -31,6 +31,17 @@ function costEstimate(totalKm: number, days: number, people: number) {
   return { fuel, tolls, stay, food, total: fuel + tolls + stay + food };
 }
 
+function currentPosition(): Promise<GeolocationPosition | null> {
+  if (!navigator.geolocation) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000
+    });
+  });
+}
+
 export default function TripPage() {
   const [stops, setStops] = useState<TripStop[]>([]);
   const [q, setQ] = useState('');
@@ -81,7 +92,12 @@ export default function TripPage() {
 
   async function shareTrip() {
     const lines = selectedPlaces.map((item, index) => `${index + 1}. Day ${item.stop.day}: ${item.place.name}, ${item.place.district}`);
-    const text = `Margasiri trip from ${startDate}\n${lines.join('\n')}\nEstimated shared cost: Rs ${cost.total.toLocaleString('en-IN')}`;
+    setStatus('Preparing check-in...');
+    const position = await currentPosition();
+    const locationLine = position
+      ? `Current check-in: https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`
+      : 'Current check-in: location unavailable. Sharing planned route only.';
+    const text = `Margasiri trip from ${startDate}\n${lines.join('\n')}\n${locationLine}\nEstimated shared cost: Rs ${cost.total.toLocaleString('en-IN')}`;
     if (navigator.share) {
       await navigator.share({ title: 'Margasiri trip plan', text });
       return;

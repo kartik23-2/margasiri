@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import PlaceCard from '@/components/PlaceCard';
 import { getPlaceCategories } from '@/lib/categories';
+import { getSeasonalCollections } from '@/lib/collections';
 import { PLACES, type Place } from '@/lib/data/places';
 import { haversineKm } from '@/lib/geo';
 import { saveLastLocation } from '@/lib/lastLocation';
@@ -60,6 +61,7 @@ export default function HomePage() {
   const history = useMemo(() => placesWithDistance.filter((place) => getPlaceCategories(place).includes('History')).slice(0, 12), [placesWithDistance]);
   const wild = useMemo(() => placesWithDistance.filter((place) => ['Wildlife', 'Wilderness', 'Nature'].some((cat) => getPlaceCategories(place).includes(cat as any))).slice(0, 12), [placesWithDistance]);
   const coast = useMemo(() => placesWithDistance.filter((place) => getPlaceCategories(place).includes('Beach')).slice(0, 12), [placesWithDistance]);
+  const collections = useMemo(() => getSeasonalCollections().slice(0, 3), []);
 
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
@@ -141,6 +143,27 @@ export default function HomePage() {
           );
         })}
       </div>
+
+      <section className="mb-9">
+        <div className="mb-3 flex items-center justify-between px-6">
+          <h2 className="font-display text-2xl">Seasonal collections</h2>
+          <Link href="/collections" className="text-xs font-semibold text-indigo">See all</Link>
+        </div>
+        <div className="flex snap-x gap-4 overflow-x-auto px-6 pb-2">
+          {collections.map((collection) => (
+            <Link
+              key={collection.slug}
+              href={`/explore?collection=${collection.slug}`}
+              className="w-[78vw] max-w-[320px] shrink-0 snap-start rounded-2xl border border-black/10 bg-paper-light p-4"
+            >
+              <p className="text-xs uppercase tracking-widest opacity-50">{collection.season}</p>
+              <h3 className="mt-2 font-display text-2xl">{collection.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed opacity-75">{collection.description}</p>
+              <p className="mt-4 text-xs font-semibold text-indigo">{collection.places.length} places</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <Rail title={origin ? 'Nearest to you' : 'Turn on location for nearest places'} places={nearest} origin={origin} />
       <Rail title={activeCategory ? `${activeCategory} picks` : ''} places={categoryFeed} origin={origin} />

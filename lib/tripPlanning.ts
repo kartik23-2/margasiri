@@ -4,6 +4,7 @@ export interface AmenityInfo {
   label: string;
   value: string;
   note: string;
+  query?: string;
 }
 
 export interface TravelIntelligence {
@@ -65,17 +66,20 @@ export function getTravelIntelligence(place: Place): TravelIntelligence {
       {
         label: 'Petrol pumps',
         value: `Plan fuel before the last ${categoryFuelKm(place)}`,
-        note: remoteness === 'Remote' ? 'Do not enter the final stretch near empty; pumps may close early.' : 'Top up at the last main road or town junction.'
+        note: remoteness === 'Remote' ? 'Do not enter the final stretch near empty; pumps may close early.' : 'Top up at the last main road or town junction.',
+        query: 'petrol pump'
       },
       {
         label: 'ATMs',
         value: `${districtHub} or main bus stand area`,
-        note: 'Carry cash for parking, guides, tea stalls, local buses, and small entry fees.'
+        note: 'Carry cash for parking, guides, tea stalls, local buses, and small entry fees.',
+        query: 'ATM'
       },
       {
         label: 'Hospitals',
         value: `Nearest reliable care is usually in ${districtHub}`,
-        note: remoteness === 'Remote' ? 'For treks and forests, note the return road before starting.' : 'Search Google Maps for the closest open clinic before travel.'
+        note: remoteness === 'Remote' ? 'For treks and forests, note the return road before starting.' : 'Search Google Maps for the closest open clinic before travel.',
+        query: 'hospital'
       },
       {
         label: 'Mobile network',
@@ -87,12 +91,14 @@ export function getTravelIntelligence(place: Place): TravelIntelligence {
       {
         label: 'Bus access',
         value: `${districtHub} is the safest first target`,
-        note: 'Use state/private buses to the district hub, then confirm a local bus, jeep, taxi, or auto for the last leg.'
+        note: 'Use state/private buses to the district hub, then confirm a local bus, jeep, taxi, or auto for the last leg.',
+        query: 'bus stand'
       },
       {
         label: 'Rail access',
         value: 'Nearest railway station depends on route',
-        note: `Search trains to ${place.district} or the nearest larger city, then continue by road.`
+        note: `Search trains to ${place.district} or the nearest larger city, then continue by road.`,
+        query: 'railway station'
       },
       {
         label: 'Last-mile reality',
@@ -103,13 +109,14 @@ export function getTravelIntelligence(place: Place): TravelIntelligence {
     emergency: [
       { label: 'National emergency', value: '112', note: 'Works for police, fire, and medical emergency escalation in India.' },
       { label: 'Ambulance', value: '108', note: 'Use for medical emergencies; share coordinates if possible.' },
-      { label: 'Police', value: '100 / 112', note: `Ask for ${place.district} district jurisdiction if you are outside town limits.` },
+      { label: 'Police', value: '100 / 112', note: `Ask for ${place.district} district jurisdiction if you are outside town limits.`, query: 'police station' },
       {
         label: place.category === 'Wildlife' || place.category === 'Wilderness' ? 'Forest department' : 'Local authority',
         value: `${place.district} district office`,
         note: place.category === 'Wildlife' || place.category === 'Wilderness'
           ? 'Check entry timings, permits, animal movement, and closures before entering forest areas.'
-          : 'For crowd, parking, festival, or access issues, confirm with local police/tourism office.'
+          : 'For crowd, parking, festival, or access issues, confirm with local police/tourism office.',
+        query: place.category === 'Wildlife' || place.category === 'Wilderness' ? 'forest department office' : 'tourist information center'
       }
     ],
     costs: [

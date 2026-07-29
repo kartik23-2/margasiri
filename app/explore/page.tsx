@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { SlidersHorizontal } from 'lucide-react';
 import FilterSheet from '@/components/FilterSheet';
 import PlaceCard from '@/components/PlaceCard';
+import VoiceSearchButton from '@/components/VoiceSearchButton';
 import { getPlaceCategories } from '@/lib/categories';
+import { getSeasonalCollections } from '@/lib/collections';
 import { PLACES, getStates } from '@/lib/data/places';
 import { haversineKm } from '@/lib/geo';
 import { saveLastLocation } from '@/lib/lastLocation';
 
-export default function ExplorePage() {
+function ExploreContent() {
+  const searchParams = useSearchParams();
   const [q, setQ] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -17,6 +21,11 @@ export default function ExplorePage() {
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);
 
   const states = useMemo(() => getStates(), []);
+  const collectionSlug = searchParams.get('collection') ?? '';
+  const activeCollection = useMemo(
+    () => getSeasonalCollections().find((collection) => collection.slug === collectionSlug),
+    [collectionSlug]
+  );
 
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
@@ -32,7 +41,8 @@ export default function ExplorePage() {
   }, []);
 
   const filtered = useMemo(() => {
-    const list = PLACES.filter((place) => {
+    const basePlaces = activeCollection ? activeCollection.places : PLACES;
+    const list = basePlaces.filter((place) => {
       if (stateFilter && place.stateSlug !== stateFilter) return false;
       if (categoryFilters.length) {
         const placeCategories = getPlaceCategories(place);
@@ -54,7 +64,7 @@ export default function ExplorePage() {
     else withDistance.sort((a, b) => a.name.localeCompare(b.name));
 
     return withDistance;
-  }, [categoryFilters, origin, q, stateFilter]);
+  }, [activeCollection, categoryFilters, origin, q, stateFilter]);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-6">
@@ -80,7 +90,16 @@ export default function ExplorePage() {
           placeholder="Search by place, district or state..."
           className="w-full rounded-lg border border-black/10 bg-white px-3 py-3 text-sm"
         />
+        <VoiceSearchButton onResult={setQ} />
       </div>
+
+      {activeCollection && (
+        <div className="mb-5 rounded-xl border border-indigo/20 bg-paper-light p-4">
+          <p className="text-xs uppercase tracking-widest opacity-50">{activeCollection.season}</p>
+          <h2 className="font-display text-2xl">{activeCollection.title}</h2>
+          <p className="mt-1 text-sm opacity-70">{activeCollection.description}</p>
+        </div>
+      )}
 
       <p className="mb-4 text-xs opacity-60">
         {filtered.length} of {PLACES.length} places
@@ -110,5 +129,13 @@ export default function ExplorePage() {
         }}
       />
     </main>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<main className="mx-auto max-w-6xl px-6 py-6"><p className="text-sm opacity-60">Loading explore...</p></main>}>
+      <ExploreContent />
+    </Suspense>
   );
 }

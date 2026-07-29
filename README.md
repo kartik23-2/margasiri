@@ -35,6 +35,10 @@ Use a MapLibre-compatible OpenStreetMap-data style from MapTiler, Stadia Maps, G
 - Place details use a simple external Google Maps directions link.
 - Place details include AI-generated utility notes for petrol, ATMs, hospitals, mobile network, public transport, emergency contacts, safety, and typical costs.
 - Place weather planner uses Open-Meteo's no-key forecast endpoint for dates in the next 16 days, then falls back to seasonal travel guidance.
+- Seasonal curated collections are available on `/collections` and feed `/explore?collection=...`.
+- Explore supports browser voice search in English, Hindi, and Kannada where the browser Speech Recognition API is available.
+- Place pages show "Places like this" recommendations using category, district, and state similarity.
+- Amenity, transport, and SOS sections include direct Google Maps searches for nearby services.
 
 ## Directions
 
@@ -90,6 +94,7 @@ The Map tab and Profile Map are separate from navigation. They use MapLibre GL J
 app/
   page.tsx                    Home feed
   explore/page.tsx             Search and filter browsing
+  collections/page.tsx         Seasonal curated collections
   map/page.tsx                 All-places MapLibre map
   trip/page.tsx                Multi-day itinerary builder
   place/[slug]/page.tsx        SEO-ready place details with Google Maps directions
@@ -99,6 +104,7 @@ components/
   AddToTripButton.tsx          Adds a place to local trip storage
   GoogleDirectionsLink.tsx     External Google Maps directions link
   WeatherPlanner.tsx           Date-based weather panel
+  VoiceSearchButton.tsx        EN/HI/KN browser speech search
   AllPlacesMap.tsx             Clustered all-places map
   ProfileMap.tsx               Saved/visited user map
   PlaceCard.tsx                Reusable destination card
@@ -108,6 +114,7 @@ lib/
   lastLocation.ts              Last browser location captured by Home/Explore
   mapLibre.ts                  MapLibre CDN and tile-provider helpers
   tripPlanning.ts              Generated utility, safety, transport, and cost guidance
+  collections.ts               Seasonal collections and similar-place scoring
   supabase/                    Supabase clients
 ```
 
