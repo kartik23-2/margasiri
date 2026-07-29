@@ -5,6 +5,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
 import { getPlaceCategories } from '@/lib/categories';
 import { externalDirectionsUrl } from '@/lib/geo';
+import { localizedCategory, localizedDescription } from '@/lib/localizedContent';
 
 interface Props {
   place: Place & { distanceKm?: number | null };
@@ -12,8 +13,8 @@ interface Props {
   compact?: boolean;
 }
 
-export default function PlaceCard({ place, origin, compact = false }: Props) {
-  const { tr } = useLanguage();
+export default function PlaceCard({ place, compact = false }: Props) {
+  const { lang, tr } = useLanguage();
   const img = `https://picsum.photos/seed/${place.slug}/640/480`;
   const categories = getPlaceCategories(place).slice(0, compact ? 2 : 3);
 
@@ -25,7 +26,7 @@ export default function PlaceCard({ place, origin, compact = false }: Props) {
           <div className="flex flex-wrap gap-1.5">
             {categories.map((category) => (
               <span key={category} className="text-[10px] uppercase tracking-wide bg-indigo text-paper px-2 py-1 rounded-full">
-                {category}
+                {localizedCategory(lang, category)}
               </span>
             ))}
           </div>
@@ -41,8 +42,10 @@ export default function PlaceCard({ place, origin, compact = false }: Props) {
             <span className="ml-2 align-middle text-[9px] bg-pine text-white px-2 py-0.5 rounded-full">KA</span>
           )}
         </Link>
-        <p className="text-xs text-black/60 -mt-1">{place.district} {tr('district')}, {place.state}</p>
-        <p className="text-[13px] leading-relaxed opacity-85 flex-1">{place.description}</p>
+        <p className="text-xs text-black/60 -mt-1">
+          {place.district} {tr('district')}, {place.state}
+        </p>
+        <p className="text-[13px] leading-relaxed opacity-85 flex-1">{localizedDescription(lang, place)}</p>
         <div className="flex gap-2 mt-2">
           <a
             href={externalDirectionsUrl({ lat: place.lat, lng: place.lng })}

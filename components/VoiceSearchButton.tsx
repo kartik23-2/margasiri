@@ -42,7 +42,7 @@ export default function VoiceSearchButton({ onResult }: { onResult: (text: strin
     recognition.onresult = (event: any) => {
       const text = event.results?.[0]?.[0]?.transcript ?? '';
       if (text) onResult(text);
-      setStatus(text ? `${tr('heard')}: ${text}` : 'No speech detected.');
+      setStatus(text ? `${tr('heard')}: ${text}` : tr('noSpeechDetected'));
     };
     recognition.onerror = () => setStatus(tr('voiceStopped'));
     recognition.onend = () => setListening(false);

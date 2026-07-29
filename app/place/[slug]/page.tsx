@@ -3,18 +3,13 @@ import AddToTripButton from '@/components/AddToTripButton';
 import BackButton from '@/components/BackButton';
 import GoogleDirectionsLink from '@/components/GoogleDirectionsLink';
 import { T } from '@/components/LanguageProvider';
+import { BestTimeText, CategoryBadge, CategoryName, IdealForChips, PlaceDescription, ReachText, ThingsToDoGrid, TravelTipsList } from '@/components/PlaceLocalizedBits';
 import PlaceCard from '@/components/PlaceCard';
+import TravelUtilitySections, { TripReadinessCard } from '@/components/TravelUtilitySections';
 import WeatherPlanner from '@/components/WeatherPlanner';
 import { getPlaceCategories } from '@/lib/categories';
 import { getSimilarPlaces } from '@/lib/collections';
 import { PLACES, getPlaceBySlug } from '@/lib/data/places';
-import { getPlaceDetails } from '@/lib/placeDetails';
-import { getTravelIntelligence } from '@/lib/tripPlanning';
-
-function nearbySearchUrl(place: { lat: number; lng: number }, query: string) {
-  const q = encodeURIComponent(`${query} near ${place.lat},${place.lng}`);
-  return `https://www.google.com/maps/search/?api=1&query=${q}`;
-}
 
 export function generateStaticParams() {
   return PLACES.map((p) => ({ slug: p.slug }));
@@ -34,9 +29,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
   if (!place) return notFound();
 
   const img = `https://picsum.photos/seed/${place.slug}/1200/700`;
-  const details = getPlaceDetails(place);
   const categories = getPlaceCategories(place);
-  const travel = getTravelIntelligence(place);
   const similarPlaces = getSimilarPlaces(place);
 
   return (
@@ -50,7 +43,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {categories.map((category) => (
               <span key={category} className="text-[10px] uppercase tracking-wide bg-indigo text-paper px-2 py-1 rounded-full">
-                {category}
+                <CategoryBadge category={category} />
               </span>
             ))}
             <span className="text-[10px] uppercase tracking-wide bg-pine text-white px-2 py-1 rounded-full">
@@ -59,13 +52,9 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
           </div>
           <h1 className="font-display text-4xl md:text-5xl leading-tight mb-2">{place.name}</h1>
           <p className="opacity-60 text-sm mb-6">{place.district} <T k="district" />, {place.state}</p>
-          <p className="text-[15px] leading-relaxed opacity-85 mb-6">{details.howItIs}</p>
+          <p className="text-[15px] leading-relaxed opacity-85 mb-6"><PlaceDescription place={place} /></p>
           <div className="flex flex-wrap gap-2 mb-6">
-            {details.idealFor.map((item) => (
-              <span key={item} className="text-xs bg-paper-light border border-black/10 px-3 py-1.5 rounded-full">
-                {item}
-              </span>
-            ))}
+            <IdealForChips place={place} />
           </div>
           <div className="flex flex-wrap gap-3">
             <GoogleDirectionsLink destination={{ lat: place.lat, lng: place.lng }} />
@@ -77,99 +66,20 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
       <section className="grid md:grid-cols-2 gap-4 mb-8">
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
           <p className="text-xs uppercase tracking-wide opacity-50 mb-2"><T k="whenToVisit" /></p>
-          <p className="text-sm leading-relaxed opacity-85">{details.bestTimeToVisit}</p>
+          <p className="text-sm leading-relaxed opacity-85"><BestTimeText place={place} /></p>
         </article>
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
           <p className="text-xs uppercase tracking-wide opacity-50 mb-2"><T k="howToReach" /></p>
-          <p className="text-sm leading-relaxed opacity-85">{details.howToReach}</p>
+          <p className="text-sm leading-relaxed opacity-85"><ReachText place={place} /></p>
         </article>
       </section>
 
       <section className="mb-8 grid gap-4 lg:grid-cols-[1fr_0.8fr]">
-        <WeatherPlanner place={place} fallback={travel.weatherFallback} />
-        <article className="rounded-xl border border-black/10 bg-paper-light p-5">
-          <p className="mb-2 text-xs uppercase tracking-wide opacity-50"><T k="tripReadiness" /></p>
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-indigo px-3 py-1 text-xs font-semibold text-paper-light">{travel.remoteness}</span>
-            {travel.safety.slice(0, 2).map((item) => (
-              <span key={item} className="rounded-full bg-paper px-3 py-1 text-xs">{item}</span>
-            ))}
-          </div>
-          <p className="mt-3 text-sm leading-relaxed opacity-80">
-            These notes are generated from place type, district, and remoteness. Reconfirm locally before remote treks, forests, and late returns.
-          </p>
-        </article>
+        <WeatherPlanner place={place} fallback="" />
+        <TripReadinessCard place={place} />
       </section>
 
-      <section className="mb-8">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-widest opacity-50"><T k="nearbyUtilities" /></p>
-            <h2 className="font-display text-3xl"><T k="planPracticalBits" /></h2>
-          </div>
-          <AddToTripButton place={place} />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {travel.amenities.map((item) => (
-            <article key={item.label} className="rounded-xl border border-black/10 bg-paper-light p-4">
-              <p className="text-xs uppercase tracking-wide opacity-50">{item.label}</p>
-              <p className="mt-1 font-semibold">{item.value}</p>
-              <p className="mt-2 text-sm leading-relaxed opacity-75">{item.note}</p>
-              {item.query && (
-                <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-semibold text-indigo">
-                  <T k="searchNearby" />
-                </a>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="mb-8 grid gap-4 lg:grid-cols-3">
-        <article className="rounded-xl border border-black/10 bg-paper-light p-5">
-          <p className="mb-4 text-xs uppercase tracking-wide opacity-50"><T k="publicTransport" /></p>
-          <div className="space-y-4">
-            {travel.publicTransport.map((item) => (
-              <div key={item.label}>
-                <p className="text-sm font-semibold">{item.label}: {item.value}</p>
-                <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
-                {item.query && (
-                  <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-indigo">
-                    <T k="findOnMap" />
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
-        </article>
-        <article className="rounded-xl border border-vermillion/25 bg-paper-light p-5">
-          <p className="mb-4 text-xs uppercase tracking-wide text-vermillion"><T k="sosEmergency" /></p>
-          <div className="space-y-4">
-            {travel.emergency.map((item) => (
-              <div key={item.label}>
-                <p className="text-sm font-semibold">{item.label}: {item.value}</p>
-                <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
-                {item.query && (
-                  <a href={nearbySearchUrl(place, item.query)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-indigo">
-                    <T k="findNearest" />
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
-        </article>
-        <article className="rounded-xl border border-black/10 bg-paper-light p-5">
-          <p className="mb-4 text-xs uppercase tracking-wide opacity-50"><T k="roughCostEstimator" /></p>
-          <div className="space-y-4">
-            {travel.costs.map((item) => (
-              <div key={item.label}>
-                <p className="text-sm font-semibold">{item.label}: {item.value}</p>
-                <p className="mt-1 text-xs leading-relaxed opacity-70">{item.note}</p>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
+      <TravelUtilitySections place={place} />
 
       <section className="mb-8">
         <div className="mb-4">
@@ -185,21 +95,13 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
           <p className="text-xs uppercase tracking-wide opacity-50 mb-4"><T k="whatToDoThere" /></p>
           <div className="grid sm:grid-cols-3 gap-3">
-            {details.thingsToDo.map((item) => (
-              <div key={item} className="border border-black/10 rounded-lg p-3 bg-paper/50">
-                <p className="text-sm leading-relaxed">{item}</p>
-              </div>
-            ))}
+            <ThingsToDoGrid place={place} />
           </div>
         </article>
         <article className="bg-paper-light border border-black/10 rounded-xl p-5">
           <p className="text-xs uppercase tracking-wide opacity-50 mb-4"><T k="travelNotes" /></p>
           <ul className="space-y-3">
-            {details.travelTips.map((tip) => (
-              <li key={tip} className="text-sm leading-relaxed opacity-85">
-                {tip}
-              </li>
-            ))}
+            <TravelTipsList place={place} />
           </ul>
         </article>
       </section>
@@ -219,7 +121,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
         </div>
         <div className="bg-paper-light border border-black/10 rounded-xl p-4">
           <p className="text-xs opacity-60 mb-1"><T k="category" /></p>
-          <p className="text-sm font-medium">{place.category}</p>
+          <p className="text-sm font-medium"><CategoryName category={place.category} /></p>
         </div>
       </section>
 

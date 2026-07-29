@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { T } from '@/components/LanguageProvider';
 import PlaceCard from '@/components/PlaceCard';
 import { PLACES } from '@/lib/data/places';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -20,10 +21,10 @@ export default async function SavedPage() {
   if (!supabase) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-8">
-        <p className="text-xs uppercase tracking-widest opacity-50">Wishlist</p>
-        <h1 className="font-display text-4xl">Saved places</h1>
+        <p className="text-xs uppercase tracking-widest opacity-50"><T k="wishlist" /></p>
+        <h1 className="font-display text-4xl"><T k="savedPlaces" /></h1>
         <p className="mt-5 rounded-2xl border border-black/10 bg-paper-light p-5 text-sm opacity-75">
-          Supabase is not configured yet. Saved places will appear here once auth is enabled.
+          <T k="supabaseSavedMissing" />
         </p>
       </main>
     );
@@ -34,11 +35,11 @@ export default async function SavedPage() {
     return (
       <main className="mx-auto max-w-5xl px-6 py-8">
         <div className="rounded-3xl bg-indigo p-6 text-paper-light">
-          <p className="text-xs uppercase tracking-widest opacity-60">Wishlist</p>
-          <h1 className="mt-2 font-display text-4xl">Save places for later</h1>
-          <p className="mt-2 max-w-lg text-sm opacity-75">Sign in to keep a personal list of places you want to visit.</p>
+          <p className="text-xs uppercase tracking-widest opacity-60"><T k="wishlist" /></p>
+          <h1 className="mt-2 font-display text-4xl"><T k="savePlacesLater" /></h1>
+          <p className="mt-2 max-w-lg text-sm opacity-75"><T k="savedSigninCopy" /></p>
           <Link href="/signin" className="mt-5 inline-block rounded-xl bg-vermillion px-5 py-3 text-sm font-semibold">
-            Sign in
+            <T k="signIn" />
           </Link>
         </div>
       </main>
@@ -50,9 +51,9 @@ export default async function SavedPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
-      <p className="text-xs uppercase tracking-widest opacity-50">Wishlist</p>
-      <h1 className="font-display text-4xl">Saved places</h1>
-      <p className="mb-6 mt-2 text-sm opacity-70">{savedPlaces.length} places saved</p>
+      <p className="text-xs uppercase tracking-widest opacity-50"><T k="wishlist" /></p>
+      <h1 className="font-display text-4xl"><T k="savedPlaces" /></h1>
+      <p className="mb-6 mt-2 text-sm opacity-70">{savedPlaces.length} <T k="placesSaved" /></p>
 
       {savedPlaces.length ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -62,7 +63,7 @@ export default async function SavedPage() {
         </div>
       ) : (
         <p className="rounded-2xl border border-black/10 bg-paper-light p-5 text-sm opacity-75">
-          No saved places yet. Open a destination and save it to build your wishlist.
+          <T k="noSavedPlaces" />
         </p>
       )}
     </main>

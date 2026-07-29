@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
-import { MAPLIBRE_CSS, MAPLIBRE_JS, missingTileProviderMessage, osmStyleUrl } from '@/lib/mapLibre';
+import { MAPLIBRE_CSS, MAPLIBRE_JS, osmStyleUrl } from '@/lib/mapLibre';
 
 declare global {
   interface Window {
@@ -38,14 +39,15 @@ function loadMapLibre() {
 }
 
 export default function ProfileMap({ saved, visited }: { saved: Place[]; visited: Place[] }) {
+  const { tr } = useLanguage();
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
-  const [status, setStatus] = useState('Loading your map...');
+  const [status, setStatus] = useState('');
   const tileStyleUrl = osmStyleUrl();
 
   useEffect(() => {
     if (!tileStyleUrl) {
-      setStatus(missingTileProviderMessage('My Map'));
+      setStatus(tr('mapStyleMissing'));
       return undefined;
     }
 
@@ -71,31 +73,31 @@ export default function ProfileMap({ saved, visited }: { saved: Place[]; visited
           el.className = `h-5 w-5 rounded-full border-[3px] border-paper-light shadow-lg ${kind === 'saved' ? 'bg-vermillion' : 'bg-pine'}`;
           new maplibregl.Marker({ element: el })
             .setLngLat([place.lng, place.lat])
-            .setPopup(new maplibregl.Popup().setHTML(`<strong>${place.name}</strong><br/><a href="/place/${place.slug}">Open place</a>`))
+            .setPopup(new maplibregl.Popup().setHTML(`<strong>${place.name}</strong><br/><a href="/place/${place.slug}">${tr('openDetails')}</a>`))
             .addTo(map);
         };
 
         saved.forEach((place) => addPin(place, 'saved'));
         visited.forEach((place) => addPin(place, 'visited'));
-        setStatus(all.length ? 'Saved and visited places are pinned.' : 'Save or mark places visited to build your map.');
+        setStatus(all.length ? tr('profileMapPinned') : tr('profileMapEmpty'));
       });
-    }).catch(() => setStatus('Could not load the OSM map style.'));
+    }).catch(() => setStatus(tr('mapLoadFailed')));
 
     return () => {
       disposed = true;
       mapRef.current?.remove();
     };
-  }, [saved, tileStyleUrl, visited]);
+  }, [saved, tileStyleUrl, tr, visited]);
 
   return (
     <div className="relative h-[calc(100vh-65px)] bg-indigo">
       <div ref={mapNodeRef} className="absolute inset-0" />
       <div className="absolute left-4 top-4 z-10 rounded-xl bg-paper-light px-4 py-3 text-sm text-ink shadow">
-        <p className="font-semibold">My Map</p>
-        <p className="mt-1 text-xs opacity-70">{status}</p>
+        <p className="font-semibold">{tr('myMap')}</p>
+        <p className="mt-1 text-xs opacity-70">{status || tr('loadingMap')}</p>
         <div className="mt-3 flex gap-3 text-xs">
-          <span><span className="inline-block h-2.5 w-2.5 rounded-full bg-vermillion" /> Saved</span>
-          <span><span className="inline-block h-2.5 w-2.5 rounded-full bg-pine" /> Visited</span>
+          <span><span className="inline-block h-2.5 w-2.5 rounded-full bg-vermillion" /> {tr('saved')}</span>
+          <span><span className="inline-block h-2.5 w-2.5 rounded-full bg-pine" /> {tr('visited')}</span>
         </div>
       </div>
     </div>

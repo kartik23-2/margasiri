@@ -12,9 +12,10 @@ import { getSeasonalCollections } from '@/lib/collections';
 import { PLACES, getStates } from '@/lib/data/places';
 import { haversineKm } from '@/lib/geo';
 import { saveLastLocation } from '@/lib/lastLocation';
+import { localizedCollection } from '@/lib/localizedContent';
 
 function ExploreContent() {
-  const { tr } = useLanguage();
+  const { lang, tr } = useLanguage();
   const searchParams = useSearchParams();
   const [q, setQ] = useState('');
   const [stateFilter, setStateFilter] = useState('');
@@ -97,14 +98,21 @@ function ExploreContent() {
 
       {activeCollection && (
         <div className="mb-5 rounded-xl border border-indigo/20 bg-paper-light p-4">
-          <p className="text-xs uppercase tracking-widest opacity-50">{activeCollection.season}</p>
-          <h2 className="font-display text-2xl">{activeCollection.title}</h2>
-          <p className="mt-1 text-sm opacity-70">{activeCollection.description}</p>
+          {(() => {
+            const collection = localizedCollection(lang, activeCollection);
+            return (
+              <>
+                <p className="text-xs uppercase tracking-widest opacity-50">{collection.season}</p>
+                <h2 className="font-display text-2xl">{collection.title}</h2>
+                <p className="mt-1 text-sm opacity-70">{collection.description}</p>
+              </>
+            );
+          })()}
         </div>
       )}
 
       <p className="mb-4 text-xs opacity-60">
-        {filtered.length} of {PLACES.length} {tr('places')}
+        {filtered.length} {tr('of')} {PLACES.length} {tr('places')}
         {(stateFilter || categoryFilters.length > 0) && ` - ${categoryFilters.length + (stateFilter ? 1 : 0)} ${tr('filtersActive')}`}
       </p>
 
@@ -136,7 +144,7 @@ function ExploreContent() {
 
 export default function ExplorePage() {
   return (
-    <Suspense fallback={<main className="mx-auto max-w-6xl px-6 py-6"><p className="text-sm opacity-60">Loading explore...</p></main>}>
+    <Suspense fallback={<main className="mx-auto max-w-6xl px-6 py-6" />}>
       <ExploreContent />
     </Suspense>
   );

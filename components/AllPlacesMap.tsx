@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
-import { MAPLIBRE_CSS, MAPLIBRE_JS, missingTileProviderMessage, osmStyleUrl } from '@/lib/mapLibre';
+import { MAPLIBRE_CSS, MAPLIBRE_JS, osmStyleUrl } from '@/lib/mapLibre';
 
 declare global {
   interface Window {
@@ -38,14 +39,15 @@ function loadMapLibre() {
 }
 
 export default function AllPlacesMap({ places }: { places: Place[] }) {
+  const { tr } = useLanguage();
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
-  const [status, setStatus] = useState('Loading map...');
+  const [status, setStatus] = useState('');
   const tileStyleUrl = osmStyleUrl();
 
   useEffect(() => {
     if (!tileStyleUrl) {
-      setStatus(missingTileProviderMessage('the India map tab'));
+      setStatus(tr('mapStyleMissing'));
       return undefined;
     }
 
@@ -134,28 +136,28 @@ export default function AllPlacesMap({ places }: { places: Place[] }) {
             const props = feature.properties;
             new maplibregl.Popup()
               .setLngLat(feature.geometry.coordinates)
-              .setHTML(`<strong>${props.name}</strong><br/><span>${props.state}</span><br/><a href="/place/${props.slug}">Open details</a>`)
+              .setHTML(`<strong>${props.name}</strong><br/><span>${props.state}</span><br/><a href="/place/${props.slug}">${tr('openDetails')}</a>`)
               .addTo(map);
           });
 
-          setStatus(`${places.length} places on the map.`);
+          setStatus(`${places.length} ${tr('placesOnMap')}`);
         });
       })
-      .catch(() => setStatus('Could not load the OSM map style.'));
+      .catch(() => setStatus(tr('mapLoadFailed')));
 
     return () => {
       disposed = true;
       mapRef.current?.remove();
     };
-  }, [places, tileStyleUrl]);
+  }, [places, tileStyleUrl, tr]);
 
   return (
     <div className="relative h-[calc(100vh-145px)] min-h-[560px] overflow-hidden bg-indigo">
       <div ref={nodeRef} className="absolute inset-0" />
       <div className="absolute left-4 right-4 top-4 z-10 rounded-2xl bg-paper-light/95 p-4 text-ink shadow-lg sm:right-auto sm:w-80">
-        <p className="text-xs uppercase tracking-widest opacity-50">Map</p>
-        <h1 className="font-display text-3xl">Browse India</h1>
-        <p className="mt-1 text-xs opacity-70">{status}</p>
+        <p className="text-xs uppercase tracking-widest opacity-50">{tr('map')}</p>
+        <h1 className="font-display text-3xl">{tr('browseIndia')}</h1>
+        <p className="mt-1 text-xs opacity-70">{status || tr('loadingMap')}</p>
       </div>
     </div>
   );

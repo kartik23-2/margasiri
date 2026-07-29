@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { T } from '@/components/LanguageProvider';
 import PlaceCard from '@/components/PlaceCard';
 import { getPlacesByState, getStates } from '@/lib/data/places';
 
@@ -14,7 +15,7 @@ export default function StatePage({ params }: { params: { slug: string } }) {
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="font-display text-3xl mb-2">{stateName}</h1>
-      <p className="opacity-60 text-sm mb-8">{places.length} places mapped</p>
+      <p className="opacity-60 text-sm mb-8">{places.length} <T k="places" /> <T k="mapped" /></p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {places.map((p) => (
           <PlaceCard key={p.slug} place={p} />

@@ -12,7 +12,7 @@ export function ShareAppButton() {
   async function share() {
     const shareData = {
       title: 'Margasiri',
-      text: 'Find overlooked places across India with live distance and Google Maps directions.',
+      text: tr('shareText'),
       url: 'https://margasiri.vercel.app'
     };
 
@@ -22,13 +22,13 @@ export function ShareAppButton() {
     }
 
     await navigator.clipboard.writeText(shareData.url);
-    setStatus('Link copied.');
+    setStatus(tr('linkCopied'));
   }
 
   return (
     <button type="button" onClick={share} className="w-full text-left">
       <span className="font-semibold">{tr('shareApp')}</span>
-      <span className="block text-xs opacity-60">{status || 'Send Margasiri to a friend'}</span>
+      <span className="block text-xs opacity-60">{status || tr('shareHint')}</span>
     </button>
   );
 }
@@ -47,21 +47,22 @@ export function LogoutButton() {
   return (
     <button type="button" onClick={logout} className="w-full text-left">
       <span className="font-semibold">{tr('logout')}</span>
-      <span className="block text-xs opacity-60">Sign out of this device</span>
+      <span className="block text-xs opacity-60">{tr('logoutHint')}</span>
     </button>
   );
 }
 
 export function DeleteAccountButton() {
   const router = useRouter();
+  const { tr } = useLanguage();
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState('');
 
   async function deleteAccount() {
-    setStatus('Deleting account...');
+    setStatus(tr('deletingAccount'));
     const res = await fetch('/api/account/delete', { method: 'POST' });
     if (!res.ok) {
-      setStatus('Account deletion could not be completed. Check Supabase service role configuration.');
+      setStatus(tr('deleteFailed'));
       return;
     }
 
@@ -74,21 +75,21 @@ export function DeleteAccountButton() {
   if (!confirming) {
     return (
       <button type="button" onClick={() => setConfirming(true)} className="w-full text-left text-vermillion">
-        <span className="font-semibold">Delete account</span>
-        <span className="block text-xs opacity-70">Requires confirmation</span>
+        <span className="font-semibold">{tr('deleteAccount')}</span>
+        <span className="block text-xs opacity-70">{tr('requiresConfirmation')}</span>
       </button>
     );
   }
 
   return (
     <div>
-      <p className="text-sm font-semibold text-vermillion">This permanently deletes your account and all saved/visited data. This cannot be undone.</p>
+      <p className="text-sm font-semibold text-vermillion">{tr('deleteWarning')}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" onClick={deleteAccount} className="rounded-lg bg-vermillion px-4 py-2 text-sm font-semibold text-white">
-          Confirm delete
+          {tr('confirmDelete')}
         </button>
         <button type="button" onClick={() => setConfirming(false)} className="rounded-lg border border-black/10 px-4 py-2 text-sm font-semibold">
-          Cancel
+          {tr('cancel')}
         </button>
       </div>
       {status && <p className="mt-2 text-xs opacity-70">{status}</p>}

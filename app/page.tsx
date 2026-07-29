@@ -9,6 +9,7 @@ import { getSeasonalCollections } from '@/lib/collections';
 import { PLACES, type Place } from '@/lib/data/places';
 import { haversineKm } from '@/lib/geo';
 import { saveLastLocation } from '@/lib/lastLocation';
+import { localizedCategory, localizedCollection } from '@/lib/localizedContent';
 
 interface PlaceWithDistance extends Place {
   distanceKm?: number | null;
@@ -17,13 +18,14 @@ interface PlaceWithDistance extends Place {
 const homeCategories = ['Art & Culture', 'Architecture', 'History', 'Nature', 'Adventure', 'Wildlife', 'Beach', 'Spiritual', 'Village'];
 
 function Rail({ title, places, origin }: { title: string; places: PlaceWithDistance[]; origin?: { lat: number; lng: number } | null }) {
+  const { tr } = useLanguage();
   if (!places.length) return null;
 
   return (
     <section className="mb-9">
       <div className="mb-3 flex items-center justify-between px-6">
         <h2 className="font-display text-2xl">{title}</h2>
-        <Link href="/explore" className="text-xs font-semibold text-indigo">See all</Link>
+        <Link href="/explore" className="text-xs font-semibold text-indigo">{tr('seeAll')}</Link>
       </div>
       <div className="flex snap-x gap-4 overflow-x-auto px-6 pb-2">
         {places.map((place) => (
@@ -37,7 +39,7 @@ function Rail({ title, places, origin }: { title: string; places: PlaceWithDista
 }
 
 export default function HomePage() {
-  const { tr } = useLanguage();
+  const { lang, tr } = useLanguage();
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [tracking, setTracking] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('');
@@ -140,7 +142,7 @@ export default function HomePage() {
                 active ? 'border-indigo bg-indigo text-paper-light' : 'border-black/10 bg-paper-light'
               }`}
             >
-              {category}
+              {localizedCategory(lang, category)}
             </button>
           );
         })}
@@ -152,7 +154,9 @@ export default function HomePage() {
           <Link href="/collections" className="text-xs font-semibold text-indigo">{tr('seeAll')}</Link>
         </div>
         <div className="flex snap-x gap-4 overflow-x-auto px-6 pb-2">
-          {collections.map((collection) => (
+          {collections.map((rawCollection) => {
+            const collection = localizedCollection(lang, rawCollection);
+            return (
             <Link
               key={collection.slug}
               href={`/explore?collection=${collection.slug}`}
@@ -161,14 +165,15 @@ export default function HomePage() {
               <p className="text-xs uppercase tracking-widest opacity-50">{collection.season}</p>
               <h3 className="mt-2 font-display text-2xl">{collection.title}</h3>
               <p className="mt-2 text-sm leading-relaxed opacity-75">{collection.description}</p>
-              <p className="mt-4 text-xs font-semibold text-indigo">{collection.places.length} places</p>
+              <p className="mt-4 text-xs font-semibold text-indigo">{collection.places.length} {tr('places')}</p>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </section>
 
       <Rail title={origin ? tr('nearestToYou') : tr('turnOnNearest')} places={nearest} origin={origin} />
-      <Rail title={activeCategory ? `${activeCategory} picks` : ''} places={categoryFeed} origin={origin} />
+      <Rail title={activeCategory ? `${localizedCategory(lang, activeCategory)} ${tr('picks')}` : ''} places={categoryFeed} origin={origin} />
       <Rail title={tr('karnatakaPicks')} places={karnatakaPicks} origin={origin} />
       <Rail title={tr('historyLovers')} places={history} origin={origin} />
       <Rail title={tr('intoWild')} places={wild} origin={origin} />

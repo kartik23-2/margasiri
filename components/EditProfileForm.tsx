@@ -39,24 +39,24 @@ export default function EditProfileForm() {
     event.preventDefault();
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
-      setStatus('Supabase is not configured yet.');
+      setStatus(tr('supabaseMissing'));
       return;
     }
 
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
-      setStatus('Sign in first.');
+      setStatus(tr('signInFirst'));
       return;
     }
 
     let nextImagePath = imagePath;
     if (file) {
       if (!isValidProfilePicture(file)) {
-        setStatus('Choose an image under 5 MB.');
+        setStatus(tr('chooseSmallImage'));
         return;
       }
 
-      setStatus('Uploading profile picture...');
+      setStatus(tr('uploadingProfilePicture'));
       const path = profilePicturePath(data.user.id, file);
       const { error: uploadError } = await supabase.storage
         .from(PROFILE_PICTURES_BUCKET)
@@ -82,13 +82,13 @@ export default function EditProfileForm() {
 
     await supabase.from('profiles').upsert({ id: data.user.id, name, image: nextImagePath, email: data.user.email });
     setFile(null);
-    setStatus('Profile updated.');
+    setStatus(tr('profileUpdated'));
   }
 
   return (
     <form onSubmit={save} className="mt-8 rounded-2xl border border-black/10 bg-paper-light p-5">
       <label className="block">
-        <span className="mb-1 block text-xs uppercase tracking-wide opacity-50">Name</span>
+        <span className="mb-1 block text-xs uppercase tracking-wide opacity-50">{tr('name')}</span>
         <input value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-lg border border-black/10 bg-white px-3 py-3 text-sm" />
       </label>
       <label className="mt-4 block">
@@ -107,7 +107,7 @@ export default function EditProfileForm() {
       {previewUrl && (
         <div className="mt-4 flex items-center gap-3">
           <img src={previewUrl} alt="" className="h-16 w-16 rounded-full border border-black/10 object-cover" />
-          <p className="text-xs opacity-65">Image files are uploaded to the Supabase `profile_pictures` bucket. The profile row stores the storage path, not an external image URL.</p>
+          <p className="text-xs opacity-65">{tr('profileBucketCopy')}</p>
         </div>
       )}
       <button type="submit" className="mt-5 rounded-lg bg-indigo px-5 py-3 text-sm font-semibold text-paper-light">

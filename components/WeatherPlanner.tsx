@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
+import { localizedWeatherFallback } from '@/lib/localizedContent';
 
 interface WeatherDay {
   time: string[];
@@ -23,9 +24,9 @@ function daysFromToday(date: string) {
 }
 
 export default function WeatherPlanner({ place, fallback }: { place: Place; fallback: string }) {
-  const { tr } = useLanguage();
+  const { lang, tr } = useLanguage();
   const [date, setDate] = useState(todayIso());
-  const [status, setStatus] = useState('Choose a date to check forecast.');
+  const [status, setStatus] = useState('');
   const [forecast, setForecast] = useState<{ high?: number; low?: number; rain?: number; mm?: number } | null>(null);
   const inForecastWindow = useMemo(() => {
     const days = daysFromToday(date);
@@ -35,7 +36,7 @@ export default function WeatherPlanner({ place, fallback }: { place: Place; fall
   useEffect(() => {
     if (!inForecastWindow) {
       setForecast(null);
-      setStatus('Live forecast is available for the next 16 days. Showing seasonal guidance for this date.');
+      setStatus(tr('forecastWindow'));
       return;
     }
 
@@ -47,7 +48,7 @@ export default function WeatherPlanner({ place, fallback }: { place: Place; fall
     url.searchParams.set('start_date', date);
     url.searchParams.set('end_date', date);
 
-    setStatus('Loading forecast...');
+    setStatus(tr('loadingForecast'));
     fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error('weather failed');
@@ -60,13 +61,13 @@ export default function WeatherPlanner({ place, fallback }: { place: Place; fall
           rain: data.daily?.precipitation_probability_max?.[0],
           mm: data.daily?.precipitation_sum?.[0]
         });
-        setStatus('Forecast from Open-Meteo. Recheck before leaving.');
+        setStatus(tr('forecastReady'));
       })
       .catch(() => {
         setForecast(null);
-        setStatus('Could not load live forecast. Showing seasonal guidance.');
+        setStatus(tr('forecastFailed'));
       });
-  }, [date, inForecastWindow, place.lat, place.lng]);
+  }, [date, inForecastWindow, place.lat, place.lng, tr]);
 
   return (
     <article className="rounded-xl border border-black/10 bg-paper-light p-5">
@@ -80,14 +81,14 @@ export default function WeatherPlanner({ place, fallback }: { place: Place; fall
         />
         {forecast && (
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-indigo px-3 py-1 text-paper-light">High {Math.round(forecast.high ?? 0)}C</span>
-            <span className="rounded-full bg-paper px-3 py-1">Low {Math.round(forecast.low ?? 0)}C</span>
-            <span className="rounded-full bg-paper px-3 py-1">Rain {forecast.rain ?? 0}%</span>
+            <span className="rounded-full bg-indigo px-3 py-1 text-paper-light">{tr('high')} {Math.round(forecast.high ?? 0)}C</span>
+            <span className="rounded-full bg-paper px-3 py-1">{tr('low')} {Math.round(forecast.low ?? 0)}C</span>
+            <span className="rounded-full bg-paper px-3 py-1">{tr('rain')} {forecast.rain ?? 0}%</span>
             <span className="rounded-full bg-paper px-3 py-1">{forecast.mm ?? 0} mm</span>
           </div>
         )}
       </div>
-      <p className="mt-3 text-sm leading-relaxed opacity-80">{forecast ? status : `${status} ${fallback}`}</p>
+      <p className="mt-3 text-sm leading-relaxed opacity-80">{forecast ? status : `${status || tr('chooseDateForecast')} ${localizedWeatherFallback(lang, place) || fallback}`}</p>
     </article>
   );
 }

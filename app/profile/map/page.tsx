@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { T } from '@/components/LanguageProvider';
 import ProfileMap from '@/components/ProfileMap';
 import { PLACES } from '@/lib/data/places';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -20,8 +21,8 @@ export default async function ProfileMapPage() {
   if (!supabase) {
     return (
       <main className="mx-auto max-w-4xl px-6 py-10">
-        <h1 className="font-display text-4xl">My Map</h1>
-        <p className="mt-3 rounded-xl border border-black/10 bg-paper-light p-5 text-sm opacity-75">Supabase is not configured yet.</p>
+        <h1 className="font-display text-4xl"><T k="myMap" /></h1>
+        <p className="mt-3 rounded-xl border border-black/10 bg-paper-light p-5 text-sm opacity-75"><T k="supabaseMissing" /></p>
       </main>
     );
   }
@@ -30,9 +31,9 @@ export default async function ProfileMapPage() {
   if (!userData.user) {
     return (
       <main className="mx-auto max-w-4xl px-6 py-10">
-        <h1 className="font-display text-4xl">My Map</h1>
+        <h1 className="font-display text-4xl"><T k="myMap" /></h1>
         <Link href="/signin" className="mt-5 inline-block rounded-lg bg-indigo px-5 py-3 text-sm font-semibold text-paper-light">
-          Sign in to view your map
+          <T k="signInToViewMap" />
         </Link>
       </main>
     );

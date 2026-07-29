@@ -22,7 +22,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (isLang(stored)) setLangState(stored);
+    if (isLang(stored)) {
+      setLangState(stored);
+      document.documentElement.lang = stored;
+    }
   }, []);
 
   function setLang(next: Lang) {
@@ -42,10 +45,10 @@ export function useLanguage() {
 }
 
 export function LanguageSwitcher() {
-  const { lang, setLang } = useLanguage();
+  const { lang, setLang, tr } = useLanguage();
 
   return (
-    <div className="flex rounded-full border border-black/10 bg-paper-light p-1" aria-label="Language">
+    <div className="flex rounded-full border border-black/10 bg-paper-light p-1" aria-label={tr('language')}>
       {(Object.keys(LANG_LABELS) as Lang[]).map((item) => (
         <button
           key={item}
