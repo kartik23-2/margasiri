@@ -16,10 +16,10 @@ Open http://localhost:3000. Home, Explore, Map, Saved, Profile, place detail pag
 Map browsing screens also need:
 
 ```bash
-NEXT_PUBLIC_TILE_PROVIDER_URL="https://your-provider/style.json"
+NEXT_PUBLIC_MAPTILER_API_KEY="your-maptiler-key"
 ```
 
-Use a MapLibre-compatible OpenStreetMap-data style from MapTiler, Stadia Maps, Geoapify, or your own `tileserver-gl`. Do not use the public `tile.openstreetmap.org` server for a production app.
+By default, Margasiri builds a MapLibre-compatible MapTiler streets style URL from that key. You can still override it with `NEXT_PUBLIC_TILE_PROVIDER_URL` if you want to use Stadia Maps, Geoapify, or your own `tileserver-gl`. Do not use the public `tile.openstreetmap.org` server for a production app.
 
 ## Working Now
 
@@ -134,4 +134,4 @@ Deploy to Vercel with:
 vercel deploy --prod
 ```
 
-Set Supabase env vars and `NEXT_PUBLIC_TILE_PROVIDER_URL` in Vercel production. Without the tile style, map browsing screens will show setup messages instead of falling back to public OSM infrastructure.
+Set Supabase env vars and `NEXT_PUBLIC_MAPTILER_API_KEY` in Vercel production. Without a MapTiler key or `NEXT_PUBLIC_TILE_PROVIDER_URL`, map browsing screens will show setup messages instead of falling back to public OSM infrastructure.
