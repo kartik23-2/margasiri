@@ -1,47 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
-import { MAPLIBRE_CSS, MAPLIBRE_JS, osmStyleUrl } from '@/lib/mapLibre';
-
-declare global {
-  interface Window {
-    maplibregl?: any;
-  }
-}
-
-function loadMapLibre() {
-  if (window.maplibregl) return Promise.resolve(window.maplibregl);
-
-  return new Promise<any>((resolve, reject) => {
-    if (!document.querySelector(`link[href="${MAPLIBRE_CSS}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = MAPLIBRE_CSS;
-      document.head.appendChild(link);
-    }
-
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${MAPLIBRE_JS}"]`);
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.maplibregl));
-      existing.addEventListener('error', reject);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = MAPLIBRE_JS;
-    script.async = true;
-    script.onload = () => resolve(window.maplibregl);
-    script.onerror = reject;
-    document.body.appendChild(script);
-  });
-}
+import { osmStyleUrl } from '@/lib/mapLibre';
 
 export default function ProfileMap({ saved, visited }: { saved: Place[]; visited: Place[] }) {
   const { tr } = useLanguage();
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
   const [status, setStatus] = useState('');
   const tileStyleUrl = osmStyleUrl();
 
@@ -52,17 +20,16 @@ export default function ProfileMap({ saved, visited }: { saved: Place[]; visited
     }
 
     let disposed = false;
-    loadMapLibre().then((maplibregl) => {
+    try {
       if (disposed || !mapNodeRef.current) return;
 
       const all = [...saved, ...visited];
-      const center = all[0] ? [all[0].lng, all[0].lat] : [78.9629, 22.5937];
+      const center: [number, number] = all[0] ? [all[0].lng, all[0].lat] : [78.9629, 22.5937];
       const map = new maplibregl.Map({
         container: mapNodeRef.current,
         style: tileStyleUrl,
         center,
-        zoom: all.length ? 6 : 4,
-        attributionControl: true
+        zoom: all.length ? 6 : 4
       });
       map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
       mapRef.current = map;
@@ -81,7 +48,9 @@ export default function ProfileMap({ saved, visited }: { saved: Place[]; visited
         visited.forEach((place) => addPin(place, 'visited'));
         setStatus(all.length ? tr('profileMapPinned') : tr('profileMapEmpty'));
       });
-    }).catch(() => setStatus(tr('mapLoadFailed')));
+    } catch {
+      setStatus(tr('mapLoadFailed'));
+    }
 
     return () => {
       disposed = true;

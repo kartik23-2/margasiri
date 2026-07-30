@@ -1,47 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { FeatureCollection, Point } from 'geojson';
+import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
-import { MAPLIBRE_CSS, MAPLIBRE_JS, osmStyleUrl } from '@/lib/mapLibre';
-
-declare global {
-  interface Window {
-    maplibregl?: any;
-  }
-}
-
-function loadMapLibre() {
-  if (window.maplibregl) return Promise.resolve(window.maplibregl);
-
-  return new Promise<any>((resolve, reject) => {
-    if (!document.querySelector(`link[href="${MAPLIBRE_CSS}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = MAPLIBRE_CSS;
-      document.head.appendChild(link);
-    }
-
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${MAPLIBRE_JS}"]`);
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.maplibregl));
-      existing.addEventListener('error', reject);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = MAPLIBRE_JS;
-    script.async = true;
-    script.onload = () => resolve(window.maplibregl);
-    script.onerror = reject;
-    document.body.appendChild(script);
-  });
-}
+import { osmStyleUrl } from '@/lib/mapLibre';
 
 export default function AllPlacesMap({ places }: { places: Place[] }) {
   const { tr } = useLanguage();
   const nodeRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
   const [status, setStatus] = useState('');
   const tileStyleUrl = osmStyleUrl();
 
@@ -52,21 +21,19 @@ export default function AllPlacesMap({ places }: { places: Place[] }) {
     }
 
     let disposed = false;
-    loadMapLibre()
-      .then((maplibregl) => {
-        if (disposed || !nodeRef.current) return;
+    try {
+      if (disposed || !nodeRef.current) return undefined;
         const map = new maplibregl.Map({
           container: nodeRef.current,
           style: tileStyleUrl,
           center: [78.9629, 22.5937],
-          zoom: 4.2,
-          attributionControl: true
+          zoom: 4.2
         });
         map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
         mapRef.current = map;
 
         map.on('load', () => {
-          const data = {
+          const data: FeatureCollection<Point> = {
             type: 'FeatureCollection',
             features: places.map((place) => ({
               type: 'Feature',
@@ -123,10 +90,13 @@ export default function AllPlacesMap({ places }: { places: Place[] }) {
 
           map.on('click', 'clusters', (event: any) => {
             const features = map.queryRenderedFeatures(event.point, { layers: ['clusters'] });
-            const clusterId = features[0].properties.cluster_id;
-            map.getSource('places').getClusterExpansionZoom(clusterId, (err: Error, zoom: number) => {
+            const feature = features[0] as any;
+            const source = map.getSource('places') as any;
+            if (!feature || !source) return;
+            const clusterId = feature.properties.cluster_id;
+            source.getClusterExpansionZoom(clusterId, (err: Error, zoom: number) => {
               if (err) return;
-              map.easeTo({ center: features[0].geometry.coordinates, zoom });
+              map.easeTo({ center: feature.geometry.coordinates, zoom });
             });
           });
 
@@ -142,8 +112,9 @@ export default function AllPlacesMap({ places }: { places: Place[] }) {
 
           setStatus(`${places.length} ${tr('placesOnMap')}`);
         });
-      })
-      .catch(() => setStatus(tr('mapLoadFailed')));
+    } catch {
+      setStatus(tr('mapLoadFailed'));
+    }
 
     return () => {
       disposed = true;

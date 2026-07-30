@@ -2,48 +2,17 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Feature, LineString, Point } from 'geojson';
+import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
 import { haversineKm, type Coords } from '@/lib/geo';
 import { readLastLocation, saveLastLocation } from '@/lib/lastLocation';
-import { MAPLIBRE_CSS, MAPLIBRE_JS, osmStyleUrl } from '@/lib/mapLibre';
-
-declare global {
-  interface Window {
-    maplibregl?: any;
-  }
-}
+import { osmStyleUrl } from '@/lib/mapLibre';
 
 interface RouteSummary {
   distanceKm: number;
   durationMin: number;
-}
-
-function loadMapLibre() {
-  if (window.maplibregl) return Promise.resolve(window.maplibregl);
-
-  return new Promise<any>((resolve, reject) => {
-    if (!document.querySelector(`link[href="${MAPLIBRE_CSS}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = MAPLIBRE_CSS;
-      document.head.appendChild(link);
-    }
-
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${MAPLIBRE_JS}"]`);
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.maplibregl));
-      existing.addEventListener('error', reject);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = MAPLIBRE_JS;
-    script.async = true;
-    script.onload = () => resolve(window.maplibregl);
-    script.onerror = reject;
-    document.body.appendChild(script);
-  });
 }
 
 function formatDuration(minutes: number) {
@@ -61,7 +30,7 @@ function routeUrl(origin: Coords, destination: Coords) {
 export default function DirectionsMap({ place }: { place: Place }) {
   const { tr } = useLanguage();
   const nodeRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
   const [origin, setOrigin] = useState<Coords | null>(null);
   const [status, setStatus] = useState('Loading MapTiler map...');
   const [summary, setSummary] = useState<RouteSummary | null>(null);
@@ -83,16 +52,14 @@ export default function DirectionsMap({ place }: { place: Place }) {
     let disposed = false;
     setMapReady(false);
 
-    loadMapLibre()
-      .then((maplibregl) => {
-        if (disposed || !nodeRef.current) return;
+    try {
+      if (disposed || !nodeRef.current) return undefined;
 
         const map = new maplibregl.Map({
           container: nodeRef.current,
           style: tileStyleUrl,
           center: [place.lng, place.lat],
-          zoom: 10,
-          attributionControl: true
+          zoom: 10
         });
 
         map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
@@ -109,8 +76,9 @@ export default function DirectionsMap({ place }: { place: Place }) {
           setStatus(origin ? 'Finding route...' : 'Turn on your location to draw directions inside Margasiri.');
           setMapReady(true);
         });
-      })
-      .catch(() => setStatus(tr('mapLoadFailed')));
+    } catch {
+      setStatus(tr('mapLoadFailed'));
+    }
 
     return () => {
       disposed = true;
@@ -137,14 +105,15 @@ export default function DirectionsMap({ place }: { place: Place }) {
         const route = data.routes?.[0];
         if (!route?.geometry) throw new Error('Route unavailable');
 
-        const sourceData = {
+        const sourceData: Feature<LineString> = {
           type: 'Feature',
           properties: {},
           geometry: route.geometry
         };
 
-        if (map.getSource('route')) {
-          map.getSource('route').setData(sourceData);
+        const routeSource = map.getSource('route') as any;
+        if (routeSource) {
+          routeSource.setData(sourceData);
         } else {
           map.addSource('route', { type: 'geojson', data: sourceData });
           map.addLayer({
@@ -156,10 +125,11 @@ export default function DirectionsMap({ place }: { place: Place }) {
           });
         }
 
-        if (!map.getSource('origin')) {
+        const originSource = map.getSource('origin') as any;
+        if (!originSource) {
           map.addSource('origin', {
             type: 'geojson',
-            data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [origin.lng, origin.lat] } }
+            data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [origin.lng, origin.lat] } } as Feature<Point>
           });
           map.addLayer({
             id: 'origin-dot',
@@ -173,10 +143,10 @@ export default function DirectionsMap({ place }: { place: Place }) {
             }
           });
         } else {
-          map.getSource('origin').setData({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [origin.lng, origin.lat] } });
+          originSource.setData({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [origin.lng, origin.lat] } } as Feature<Point>);
         }
 
-        const bounds = new window.maplibregl.LngLatBounds([origin.lng, origin.lat], [origin.lng, origin.lat]);
+        const bounds = new maplibregl.LngLatBounds([origin.lng, origin.lat], [origin.lng, origin.lat]);
         for (const [lng, lat] of route.geometry.coordinates) bounds.extend([lng, lat]);
         bounds.extend([place.lng, place.lat]);
         map.fitBounds(bounds, { padding: 64, maxZoom: 13 });
@@ -186,7 +156,7 @@ export default function DirectionsMap({ place }: { place: Place }) {
       })
       .catch(() => {
         const straightKm = haversineKm(origin, destination);
-        const sourceData = {
+        const sourceData: Feature<LineString> = {
           type: 'Feature',
           properties: {},
           geometry: {
@@ -195,8 +165,9 @@ export default function DirectionsMap({ place }: { place: Place }) {
           }
         };
 
-        if (map.getSource('route')) {
-          map.getSource('route').setData(sourceData);
+        const routeSource = map.getSource('route') as any;
+        if (routeSource) {
+          routeSource.setData(sourceData);
         } else {
           map.addSource('route', { type: 'geojson', data: sourceData });
           map.addLayer({
