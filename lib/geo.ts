@@ -17,10 +17,3 @@ export function haversineKm(a: Coords, b: Coords): number {
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-export function externalDirectionsUrl(dest: Coords, origin: Coords | null = null): string {
-  const destination = encodeURIComponent(`${dest.lat},${dest.lng}`);
-  if (!origin) return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
-
-  const originParam = encodeURIComponent(`${origin.lat},${origin.lng}`);
-  return `https://www.google.com/maps/dir/?api=1&origin=${originParam}&destination=${destination}`;
-}

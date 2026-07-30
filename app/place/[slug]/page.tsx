@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import AddToTripButton from '@/components/AddToTripButton';
 import BackButton from '@/components/BackButton';
-import GoogleDirectionsLink from '@/components/GoogleDirectionsLink';
+import DirectionsLink from '@/components/DirectionsLink';
 import { T } from '@/components/LanguageProvider';
 import { BestTimeText, CategoryBadge, CategoryName, IdealForChips, PlaceDescription, ReachText, ThingsToDoGrid, TravelTipsList } from '@/components/PlaceLocalizedBits';
 import PlaceCard from '@/components/PlaceCard';
@@ -57,7 +57,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
             <IdealForChips place={place} />
           </div>
           <div className="flex flex-wrap gap-3">
-            <GoogleDirectionsLink destination={{ lat: place.lat, lng: place.lng }} />
+            <DirectionsLink slug={place.slug} />
             <AddToTripButton place={place} />
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
             <p className="truncate text-sm font-semibold">{place.name}</p>
             <p className="text-xs opacity-60">{place.district}, {place.state}</p>
           </div>
-          <GoogleDirectionsLink destination={{ lat: place.lat, lng: place.lng }} />
+          <DirectionsLink slug={place.slug} />
         </div>
       </div>
     </main>

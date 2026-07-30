@@ -33,7 +33,7 @@ By default, Margasiri builds a MapLibre-compatible MapTiler streets style URL fr
 - `/saved`, `/profile`, settings, Google sign-in, and email/password auth flows.
 - Profile pictures upload to the Supabase Storage bucket `profile_pictures`; `profiles.image` stores the object path, not an external URL.
 - Map browsing through MapLibre GL JS.
-- Place details use a simple external Google Maps directions link.
+- Place details use in-app MapTiler directions instead of sending travelers away.
 - Place details include AI-generated utility notes for petrol, ATMs, hospitals, mobile network, public transport, emergency contacts, safety, and typical costs.
 - Place weather planner uses Open-Meteo's no-key forecast endpoint for dates in the next 16 days, then falls back to seasonal travel guidance.
 - Seasonal curated collections are available on `/collections` and feed `/explore?collection=...`.
@@ -44,21 +44,17 @@ By default, Margasiri builds a MapLibre-compatible MapTiler streets style URL fr
 
 ## Directions
 
-Margasiri intentionally links out to Google Maps for navigation instead of running in-app turn-by-turn routing.
+Margasiri keeps the directions experience inside the app. Place cards and place detail pages open `/directions/[slug]`, where MapLibre renders a MapTiler map with the destination, current/saved browser location, and a route line.
 
-The place detail page uses:
-
-```text
-https://www.google.com/maps/dir/?api=1&destination={lat},{lng}
-```
-
-If the browser has already captured a last known in-app location from Home or Explore, the link includes origin:
+The map style is powered by:
 
 ```text
-https://www.google.com/maps/dir/?api=1&origin={userLat},{userLng}&destination={lat},{lng}
+NEXT_PUBLIC_MAPTILER_API_KEY
 ```
 
-This keeps navigation simple: no routing API, no OSRM server, no traffic-data promise, no billing keys, and no infrastructure commitment before real usage shows that in-app navigation is worth building again. Google Maps gives users live traffic, voice guidance, and familiar navigation while Margasiri keeps their place open in a separate tab.
+If a saved location is already available from Home or Explore, the directions page starts from that point. Otherwise it asks for browser location permission and stores the last known location for future route views.
+
+Routing is drawn inside Margasiri for planning and preview. Travelers should still use local judgment for remote roads, closures, permits, and last-mile conditions.
 
 ## Trip Planning And Safety
 
@@ -100,12 +96,14 @@ app/
   collections/page.tsx         Seasonal curated collections
   map/page.tsx                 All-places MapLibre map
   trip/page.tsx                Multi-day itinerary builder
-  place/[slug]/page.tsx        SEO-ready place details with Google Maps directions
+  place/[slug]/page.tsx        SEO-ready place details with in-app directions
+  directions/[slug]/page.tsx   MapTiler route preview for each place
   api/places/route.ts          Static places API, ready to swap to DB
 components/
   BottomTabBar.tsx             Persistent app navigation
   AddToTripButton.tsx          Adds a place to local trip storage
-  GoogleDirectionsLink.tsx     External Google Maps directions link
+  DirectionsLink.tsx           In-app directions route link
+  DirectionsMap.tsx            MapTiler route preview
   WeatherPlanner.tsx           Date-based weather panel
   VoiceSearchButton.tsx        EN/HI/KN browser speech search
   AllPlacesMap.tsx             Clustered all-places map
