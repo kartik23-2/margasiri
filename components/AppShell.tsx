@@ -7,6 +7,11 @@ import TopAppBar from '@/components/TopAppBar';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const immersive = pathname.startsWith('/directions/');
+
+  if (immersive) {
+    return <LanguageProvider>{children}</LanguageProvider>;
+  }
 
   return (
     <LanguageProvider>

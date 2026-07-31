@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Feature, LineString, Point } from 'geojson';
+import { ChevronLeft, LocateFixed } from 'lucide-react';
 import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
@@ -35,6 +36,17 @@ function formatTime(value: number | null) {
 function routeUrl(origin: Coords, destination: Coords) {
   const coords = `${origin.lng},${origin.lat};${destination.lng},${destination.lat}`;
   return `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+}
+
+function fitJourneyBounds(map: MapLibreMap, origin: Coords | null, destination: Coords) {
+  if (!origin) {
+    map.easeTo({ center: [destination.lng, destination.lat], zoom: 12 });
+    return;
+  }
+
+  const bounds = new maplibregl.LngLatBounds([origin.lng, origin.lat], [origin.lng, origin.lat]);
+  bounds.extend([destination.lng, destination.lat]);
+  map.fitBounds(bounds, { padding: { top: 92, bottom: 300, left: 42, right: 42 }, maxZoom: 14 });
 }
 
 function upsertOriginSource(map: MapLibreMap, origin: Coords, accuracy: number | null) {
@@ -196,7 +208,7 @@ export default function DirectionsMap({ place }: { place: Place }) {
         const bounds = new maplibregl.LngLatBounds([origin.lng, origin.lat], [origin.lng, origin.lat]);
         for (const [lng, lat] of route.geometry.coordinates) bounds.extend([lng, lat]);
         bounds.extend([place.lng, place.lat]);
-        map.fitBounds(bounds, { padding: 64, maxZoom: 13 });
+        map.fitBounds(bounds, { padding: { top: 92, bottom: 300, left: 42, right: 42 }, maxZoom: 13 });
 
         setSummary({ distanceKm: route.distance / 1000, durationMin: route.duration / 60 });
         setStatus(tracking ? 'Live journey tracking is on. Route updated from your current location.' : 'Route ready inside Margasiri.');
@@ -282,29 +294,60 @@ export default function DirectionsMap({ place }: { place: Place }) {
     setStatus(origin ? 'Live journey paused. Your last known location is still shown.' : 'Live journey paused.');
   }
 
+  function recenterJourney() {
+    const map = mapRef.current;
+    if (!map) return;
+    fitJourneyBounds(map, origin, destination);
+  }
+
   return (
-    <main className="relative min-h-[calc(100vh-73px)] overflow-hidden bg-indigo">
+    <main className="relative h-[100dvh] overflow-hidden bg-indigo">
       <div ref={nodeRef} className="absolute inset-0" />
 
-      <section className="absolute left-4 right-4 top-4 z-10 max-w-md rounded-2xl border border-black/10 bg-paper-light/95 p-4 text-ink shadow-xl backdrop-blur">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <Link href={`/place/${place.slug}`} className="text-xs font-semibold text-vermillion">
-            Back to place
-          </Link>
-          <span className="rounded-full bg-indigo px-2 py-1 text-[10px] uppercase tracking-wide text-paper-light">MapTiler</span>
+      <div className="absolute left-3 right-3 top-[max(env(safe-area-inset-top),0.75rem)] z-20 flex items-center gap-2 md:left-4 md:right-auto md:w-[430px]">
+        <Link
+          href={`/place/${place.slug}`}
+          aria-label="Back to place"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-paper-light text-ink shadow-xl"
+        >
+          <ChevronLeft size={24} />
+        </Link>
+        <div className="min-w-0 flex-1 rounded-full bg-paper-light px-4 py-2 text-ink shadow-xl">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-ink/45">{tracking ? 'Live journey' : tr('directions')}</p>
+          <p className="truncate text-sm font-semibold">{place.name}</p>
         </div>
-        <p className="text-xs uppercase tracking-widest opacity-50">{tr('directions')}</p>
-        <h1 className="font-display text-3xl leading-tight">{place.name}</h1>
-        <p className="mt-1 text-xs opacity-65">{place.district}, {place.state}</p>
+      </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <button
+        type="button"
+        onClick={recenterJourney}
+        className="absolute bottom-[330px] right-4 z-20 grid h-12 w-12 place-items-center rounded-full bg-paper-light text-ink shadow-xl md:bottom-8"
+        aria-label="Recenter map"
+      >
+        <LocateFixed size={22} />
+      </button>
+
+      <section className="absolute inset-x-0 bottom-0 z-20 rounded-t-[28px] border border-black/10 bg-paper-light/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-ink shadow-2xl backdrop-blur md:inset-auto md:left-4 md:top-20 md:w-[430px] md:rounded-2xl md:p-4">
+        <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-black/15 md:hidden" />
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-widest opacity-50">To</p>
+            <h1 className="truncate font-display text-2xl leading-tight md:text-3xl">{place.name}</h1>
+            <p className="mt-0.5 truncate text-xs opacity-65">{place.district}, {place.state}</p>
+          </div>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-paper-light ${tracking ? 'bg-pine' : 'bg-indigo'}`}>
+            {tracking ? 'Live' : 'MapTiler'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-black/10 bg-paper p-3">
             <p className="text-[10px] uppercase tracking-wide opacity-50">Distance</p>
-            <p className="font-mono text-sm font-semibold">{summary ? `${summary.distanceKm.toFixed(1)} km` : '--'}</p>
+            <p className="font-mono text-lg font-semibold">{summary ? `${summary.distanceKm.toFixed(1)} km` : '--'}</p>
           </div>
           <div className="rounded-xl border border-black/10 bg-paper p-3">
             <p className="text-[10px] uppercase tracking-wide opacity-50">Time</p>
-            <p className="font-mono text-sm font-semibold">{summary ? formatDuration(summary.durationMin) : '--'}</p>
+            <p className="font-mono text-lg font-semibold">{summary ? formatDuration(summary.durationMin) : '--'}</p>
           </div>
           <div className="rounded-xl border border-black/10 bg-paper p-3">
             <p className="text-[10px] uppercase tracking-wide opacity-50">Accuracy</p>
@@ -321,7 +364,7 @@ export default function DirectionsMap({ place }: { place: Place }) {
           type="button"
           onClick={tracking ? stopJourney : startJourney}
           disabled={geoBusy}
-          className={`mt-4 w-full rounded-xl px-4 py-3 text-sm font-semibold text-paper-light disabled:opacity-60 ${tracking ? 'bg-indigo' : 'bg-vermillion'}`}
+          className={`mt-4 h-14 w-full rounded-2xl px-4 text-base font-bold text-paper-light shadow-lg disabled:opacity-60 ${tracking ? 'bg-indigo' : 'bg-vermillion'}`}
         >
           {geoBusy ? 'Getting location...' : tracking ? 'Stop journey' : 'Start journey'}
         </button>
