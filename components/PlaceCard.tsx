@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import DirectionsLink from '@/components/DirectionsLink';
 import { useLanguage } from '@/components/LanguageProvider';
+import PlaceImage from '@/components/PlaceImage';
 import type { Place } from '@/lib/data/places';
 import { getPlaceCategories } from '@/lib/categories';
 import { localizedCategory, localizedDescription } from '@/lib/localizedContent';
@@ -15,12 +16,11 @@ interface Props {
 
 export default function PlaceCard({ place, compact = false }: Props) {
   const { lang, tr } = useLanguage();
-  const img = `https://picsum.photos/seed/${place.slug}/640/480`;
   const categories = getPlaceCategories(place).slice(0, compact ? 2 : 3);
 
   return (
     <div className="bg-paper-light border border-black/10 rounded-2xl overflow-hidden flex flex-col hover:-translate-y-0.5 hover:shadow-lg transition">
-      {!compact && <img src={img} alt={place.name} className="w-full h-40 object-cover bg-paper-dark" loading="lazy" />}
+      {!compact && <PlaceImage place={place} className="w-full h-40 object-cover bg-paper-dark" />}
       <div className="p-4 flex flex-col gap-2 flex-1">
         <div className="flex items-center justify-between">
           <div className="flex flex-wrap gap-1.5">

@@ -5,6 +5,7 @@ import DirectionsLink from '@/components/DirectionsLink';
 import { T } from '@/components/LanguageProvider';
 import { BestTimeText, CategoryBadge, CategoryName, IdealForChips, PlaceDescription, ReachText, ThingsToDoGrid, TravelTipsList } from '@/components/PlaceLocalizedBits';
 import PlaceCard from '@/components/PlaceCard';
+import PlaceImage from '@/components/PlaceImage';
 import TravelUtilitySections, { TripReadinessCard } from '@/components/TravelUtilitySections';
 import WeatherPlanner from '@/components/WeatherPlanner';
 import { getPlaceCategories } from '@/lib/categories';
@@ -28,7 +29,6 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
   const place = getPlaceBySlug(params.slug);
   if (!place) return notFound();
 
-  const img = `https://picsum.photos/seed/${place.slug}/1200/700`;
   const categories = getPlaceCategories(place);
   const similarPlaces = getSimilarPlaces(place);
 
@@ -37,7 +37,7 @@ export default function PlacePage({ params }: { params: { slug: string } }) {
       <section className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start mb-10">
         <div className="relative">
           <BackButton />
-          <img src={img} alt={place.name} className="w-full h-80 lg:h-[430px] object-cover rounded-2xl bg-paper-dark" />
+          <PlaceImage place={place} className="w-full h-80 lg:h-[430px] object-cover rounded-2xl bg-paper-dark" loading="eager" />
         </div>
         <div className="lg:pt-3">
           <div className="flex flex-wrap items-center gap-2 mb-4">
