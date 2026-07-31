@@ -6,7 +6,7 @@ import { ChevronLeft, LocateFixed } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
 import { haversineKm, type Coords } from '@/lib/geo';
-import { googleMapsApiKey, loadGoogleMaps, missingGoogleMapsMessage } from '@/lib/googleMaps';
+import { googleMapsApiKey, loadGoogleMaps, missingGoogleMapsMessage, subscribeGoogleMapsAuthFailure } from '@/lib/googleMaps';
 import { readLastLocation, saveLastLocation } from '@/lib/lastLocation';
 
 interface RouteSummary {
@@ -72,6 +72,7 @@ export default function DirectionsMap({ place }: { place: Place }) {
   const [summary, setSummary] = useState<RouteSummary | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [mapsIssue, setMapsIssue] = useState('');
   const [tracking, setTracking] = useState(false);
   const [liveMeta, setLiveMeta] = useState<LivePositionMeta>({ accuracy: null, updatedAt: null });
   const apiKey = googleMapsApiKey();
@@ -80,6 +81,11 @@ export default function DirectionsMap({ place }: { place: Place }) {
   useEffect(() => {
     setOrigin(readLastLocation());
   }, []);
+
+  useEffect(() => subscribeGoogleMapsAuthFailure((message) => {
+    setMapsIssue(message);
+    setStatus(message);
+  }), []);
 
   useEffect(() => {
     return () => {
@@ -141,7 +147,11 @@ export default function DirectionsMap({ place }: { place: Place }) {
         setStatus(origin ? 'Finding Google route...' : 'Tap Start journey to show your live location and route.');
         setMapReady(true);
       })
-      .catch(() => setStatus('Could not load Google Maps.'));
+      .catch(() => {
+        const message = 'Could not load Google Maps. Check the API key, enabled APIs, billing, and allowed website referrers in Google Cloud.';
+        setMapsIssue(message);
+        setStatus(message);
+      });
 
     return () => {
       disposed = true;
@@ -315,6 +325,13 @@ export default function DirectionsMap({ place }: { place: Place }) {
       >
         <LocateFixed size={22} />
       </button>
+
+      {mapsIssue ? (
+        <div className="absolute left-3 right-3 top-20 z-30 rounded-2xl border border-vermillion/30 bg-paper-light p-4 text-ink shadow-2xl md:left-4 md:right-auto md:top-36 md:w-[430px]">
+          <p className="text-xs font-bold uppercase tracking-widest text-vermillion">Google Maps setup required</p>
+          <p className="mt-2 text-sm leading-relaxed opacity-80">{mapsIssue}</p>
+        </div>
+      ) : null}
 
       <section className="absolute inset-x-0 bottom-0 z-20 rounded-t-[28px] border border-black/10 bg-paper-light/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-ink shadow-2xl backdrop-blur md:inset-auto md:left-4 md:top-20 md:w-[430px] md:rounded-2xl md:p-4">
         <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-black/15 md:hidden" />

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
-import { googleMapsApiKey, loadGoogleMaps, missingGoogleMapsMessage } from '@/lib/googleMaps';
+import { googleMapsApiKey, loadGoogleMaps, missingGoogleMapsMessage, subscribeGoogleMapsAuthFailure } from '@/lib/googleMaps';
 
 export default function ProfileMap({ saved, visited }: { saved: Place[]; visited: Place[] }) {
   const { tr } = useLanguage();
@@ -11,6 +11,8 @@ export default function ProfileMap({ saved, visited }: { saved: Place[]; visited
   const markersRef = useRef<any[]>([]);
   const [status, setStatus] = useState('');
   const apiKey = googleMapsApiKey();
+
+  useEffect(() => subscribeGoogleMapsAuthFailure(setStatus), []);
 
   useEffect(() => {
     if (!apiKey) {
@@ -61,7 +63,7 @@ export default function ProfileMap({ saved, visited }: { saved: Place[]; visited
 
         setStatus(all.length ? tr('profileMapPinned') : tr('profileMapEmpty'));
       })
-      .catch(() => setStatus('Could not load Google Maps.'));
+      .catch(() => setStatus('Could not load Google Maps. Check the API key, enabled APIs, billing, and allowed website referrers in Google Cloud.'));
 
     return () => {
       disposed = true;

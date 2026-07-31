@@ -38,3 +38,12 @@ vercel deploy --prod
 ```
 
 Set Supabase env vars and `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in Vercel production. Because this is a browser map key, restrict it in Google Cloud Console to your allowed domains.
+
+For Google Maps production:
+
+- Enable billing on the Google Cloud project attached to the key.
+- Enable the Maps JavaScript API and Directions API.
+- Use HTTP referrer restrictions for the browser key, not IP restrictions.
+- Add allowed referrers such as `https://margasiri.vercel.app/*`, `https://*.vercel.app/*`, and `http://localhost:3000/*` for local development.
+
+If Google rejects the key, Margasiri listens for Google's `gm_authFailure` callback and shows an in-app setup message on `/map`, `/profile/map`, and `/directions/[slug]`.
