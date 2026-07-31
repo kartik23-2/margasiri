@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Feature, LineString, Point } from 'geojson';
 import { ChevronLeft, LocateFixed } from 'lucide-react';
-import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
 import { haversineKm, type Coords } from '@/lib/geo';
+import { googleMapsApiKey, loadGoogleMaps, missingGoogleMapsMessage } from '@/lib/googleMaps';
 import { readLastLocation, saveLastLocation } from '@/lib/lastLocation';
-import { osmStyleUrl } from '@/lib/mapLibre';
 
 interface RouteSummary {
   distanceKm: number;
@@ -33,75 +31,50 @@ function formatTime(value: number | null) {
   return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(value);
 }
 
-function routeUrl(origin: Coords, destination: Coords) {
-  const coords = `${origin.lng},${origin.lat};${destination.lng},${destination.lat}`;
-  return `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+function summarizeRoute(result: any): RouteSummary | null {
+  const route = result?.routes?.[0];
+  if (!route?.legs?.length) return null;
+
+  const totals = route.legs.reduce((acc: RouteSummary, leg: any) => ({
+    distanceKm: acc.distanceKm + (leg.distance?.value ?? 0) / 1000,
+    durationMin: acc.durationMin + (leg.duration?.value ?? 0) / 60
+  }), { distanceKm: 0, durationMin: 0 });
+
+  return totals.distanceKm > 0 ? totals : null;
 }
 
-function fitJourneyBounds(map: MapLibreMap, origin: Coords | null, destination: Coords) {
+function fitJourneyBounds(map: any, maps: any, origin: Coords | null, destination: Coords) {
   if (!origin) {
-    map.easeTo({ center: [destination.lng, destination.lat], zoom: 12 });
+    map.panTo(destination);
+    map.setZoom(12);
     return;
   }
 
-  const bounds = new maplibregl.LngLatBounds([origin.lng, origin.lat], [origin.lng, origin.lat]);
-  bounds.extend([destination.lng, destination.lat]);
-  map.fitBounds(bounds, { padding: { top: 92, bottom: 300, left: 42, right: 42 }, maxZoom: 14 });
-}
-
-function upsertOriginSource(map: MapLibreMap, origin: Coords, accuracy: number | null) {
-  const data = {
-    type: 'Feature',
-    properties: { accuracy: accuracy ?? 0 },
-    geometry: { type: 'Point', coordinates: [origin.lng, origin.lat] }
-  } as Feature<Point>;
-  const source = map.getSource('origin') as any;
-
-  if (source) {
-    source.setData(data);
-    return;
-  }
-
-  map.addSource('origin', { type: 'geojson', data });
-  map.addLayer({
-    id: 'origin-accuracy',
-    type: 'circle',
-    source: 'origin',
-    paint: {
-      'circle-color': '#1b2a4a',
-      'circle-radius': ['interpolate', ['linear'], ['get', 'accuracy'], 0, 18, 100, 34, 500, 52],
-      'circle-opacity': 0.14,
-      'circle-stroke-color': '#1b2a4a',
-      'circle-stroke-width': 1,
-      'circle-stroke-opacity': 0.18
-    }
-  });
-  map.addLayer({
-    id: 'origin-dot',
-    type: 'circle',
-    source: 'origin',
-    paint: {
-      'circle-color': '#1b2a4a',
-      'circle-radius': 8,
-      'circle-stroke-color': '#fdfaf1',
-      'circle-stroke-width': 3
-    }
-  });
+  const bounds = new maps.LatLngBounds();
+  bounds.extend(origin);
+  bounds.extend(destination);
+  map.fitBounds(bounds, { top: 92, bottom: 300, left: 42, right: 42 });
 }
 
 export default function DirectionsMap({ place }: { place: Place }) {
   const { tr } = useLanguage();
   const nodeRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
+  const mapRef = useRef<any>(null);
+  const mapsRef = useRef<any>(null);
+  const directionsServiceRef = useRef<any>(null);
+  const directionsRendererRef = useRef<any>(null);
+  const currentMarkerRef = useRef<any>(null);
+  const accuracyCircleRef = useRef<any>(null);
+  const destinationMarkerRef = useRef<any>(null);
   const watchIdRef = useRef<number | null>(null);
   const [origin, setOrigin] = useState<Coords | null>(null);
-  const [status, setStatus] = useState('Loading MapTiler map...');
+  const [status, setStatus] = useState('Loading Google Maps...');
   const [summary, setSummary] = useState<RouteSummary | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [tracking, setTracking] = useState(false);
   const [liveMeta, setLiveMeta] = useState<LivePositionMeta>({ accuracy: null, updatedAt: null });
-  const tileStyleUrl = osmStyleUrl();
+  const apiKey = googleMapsApiKey();
   const destination = useMemo(() => ({ lat: place.lat, lng: place.lng }), [place.lat, place.lng]);
 
   useEffect(() => {
@@ -110,142 +83,159 @@ export default function DirectionsMap({ place }: { place: Place }) {
 
   useEffect(() => {
     return () => {
-      if (watchIdRef.current != null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-      }
+      if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
     };
   }, []);
 
   useEffect(() => {
-    if (!tileStyleUrl) {
-      setStatus(tr('mapStyleMissing'));
+    if (!apiKey) {
+      setStatus(missingGoogleMapsMessage('journey directions'));
       return undefined;
     }
 
     let disposed = false;
     setMapReady(false);
 
-    try {
-      if (disposed || !nodeRef.current) return undefined;
+    loadGoogleMaps()
+      .then((maps) => {
+        if (disposed || !nodeRef.current) return;
 
-        const map = new maplibregl.Map({
-          container: nodeRef.current,
-          style: tileStyleUrl,
-          center: [place.lng, place.lat],
-          zoom: 10
+        mapsRef.current = maps;
+        const map = new maps.Map(nodeRef.current, {
+          center: destination,
+          zoom: 12,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          clickableIcons: false
         });
 
-        map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
         mapRef.current = map;
-
-        map.on('load', () => {
-          const el = document.createElement('div');
-          el.className = 'h-5 w-5 rounded-full border-2 border-paper-light bg-vermillion shadow-lg';
-          new maplibregl.Marker({ element: el })
-            .setLngLat([place.lng, place.lat])
-            .setPopup(new maplibregl.Popup().setHTML(`<strong>${place.name}</strong><br/>${place.district}, ${place.state}`))
-            .addTo(map);
-
-          setStatus(origin ? 'Finding route...' : 'Turn on your location to draw directions inside Margasiri.');
-          setMapReady(true);
+        directionsServiceRef.current = new maps.DirectionsService();
+        directionsRendererRef.current = new maps.DirectionsRenderer({
+          map,
+          suppressMarkers: true,
+          preserveViewport: true,
+          polylineOptions: {
+            strokeColor: '#1a73e8',
+            strokeOpacity: 0.95,
+            strokeWeight: 6
+          }
         });
-    } catch {
-      setStatus(tr('mapLoadFailed'));
-    }
+
+        destinationMarkerRef.current = new maps.Marker({
+          position: destination,
+          map,
+          title: place.name,
+          label: { text: 'B', color: '#ffffff', fontWeight: '700' },
+          icon: {
+            path: maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: '#b23a2f',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3
+          }
+        });
+
+        setStatus(origin ? 'Finding Google route...' : 'Tap Start journey to show your live location and route.');
+        setMapReady(true);
+      })
+      .catch(() => setStatus('Could not load Google Maps.'));
 
     return () => {
       disposed = true;
-      mapRef.current?.remove();
+      directionsRendererRef.current?.setMap(null);
+      destinationMarkerRef.current?.setMap(null);
+      currentMarkerRef.current?.setMap(null);
+      accuracyCircleRef.current?.setMap(null);
       mapRef.current = null;
+      mapsRef.current = null;
       setMapReady(false);
     };
-  }, [place.district, place.lat, place.lng, place.name, place.state, tileStyleUrl, tr]);
+  }, [apiKey, destination, origin, place.name]);
 
   useEffect(() => {
+    const maps = mapsRef.current;
     const map = mapRef.current;
-    if (!map || !mapReady || !origin) return;
+    if (!maps || !map || !mapReady || !origin) return;
 
-    upsertOriginSource(map, origin, liveMeta.accuracy);
+    if (!currentMarkerRef.current) {
+      currentMarkerRef.current = new maps.Marker({
+        position: origin,
+        map,
+        title: 'Your current location',
+        label: { text: 'A', color: '#ffffff', fontWeight: '700' },
+        icon: {
+          path: maps.SymbolPath.CIRCLE,
+          scale: 11,
+          fillColor: '#1a73e8',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 3
+        }
+      });
+    } else {
+      currentMarkerRef.current.setPosition(origin);
+    }
+
+    if (!accuracyCircleRef.current) {
+      accuracyCircleRef.current = new maps.Circle({
+        map,
+        center: origin,
+        radius: liveMeta.accuracy ?? 25,
+        strokeColor: '#1a73e8',
+        strokeOpacity: 0.22,
+        strokeWeight: 1,
+        fillColor: '#1a73e8',
+        fillOpacity: 0.12
+      });
+    } else {
+      accuracyCircleRef.current.setCenter(origin);
+      accuracyCircleRef.current.setRadius(liveMeta.accuracy ?? 25);
+    }
   }, [liveMeta.accuracy, mapReady, origin]);
 
   useEffect(() => {
+    const maps = mapsRef.current;
     const map = mapRef.current;
-    if (!map || !mapReady || !origin) return;
+    const directionsService = directionsServiceRef.current;
+    const directionsRenderer = directionsRendererRef.current;
+    if (!maps || !map || !directionsService || !directionsRenderer || !mapReady || !origin) return;
 
     let disposed = false;
-    setStatus('Finding route...');
+    setStatus('Finding Google route...');
 
-    fetch(routeUrl(origin, destination))
-      .then((res) => {
-        if (!res.ok) throw new Error('Route request failed');
-        return res.json();
-      })
-      .then((data) => {
+    directionsService.route(
+      {
+        origin,
+        destination,
+        travelMode: maps.TravelMode.DRIVING,
+        provideRouteAlternatives: false
+      },
+      (result: any, routeStatus: string) => {
         if (disposed) return;
-        const route = data.routes?.[0];
-        if (!route?.geometry) throw new Error('Route unavailable');
 
-        const sourceData: Feature<LineString> = {
-          type: 'Feature',
-          properties: {},
-          geometry: route.geometry
-        };
-
-        const routeSource = map.getSource('route') as any;
-        if (routeSource) {
-          routeSource.setData(sourceData);
-        } else {
-          map.addSource('route', { type: 'geojson', data: sourceData });
-          map.addLayer({
-            id: 'route-line',
-            type: 'line',
-            source: 'route',
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': '#b23a2f', 'line-width': 5, 'line-opacity': 0.9 }
-          });
+        if (routeStatus === maps.DirectionsStatus.OK && result) {
+          directionsRenderer.setDirections(result);
+          const nextSummary = summarizeRoute(result);
+          setSummary(nextSummary);
+          fitJourneyBounds(map, maps, origin, destination);
+          setStatus(tracking ? 'Live journey tracking is on. Google route updated from your current location.' : 'Google route ready inside Margasiri.');
+          return;
         }
 
-        const bounds = new maplibregl.LngLatBounds([origin.lng, origin.lat], [origin.lng, origin.lat]);
-        for (const [lng, lat] of route.geometry.coordinates) bounds.extend([lng, lat]);
-        bounds.extend([place.lng, place.lat]);
-        map.fitBounds(bounds, { padding: { top: 92, bottom: 300, left: 42, right: 42 }, maxZoom: 13 });
-
-        setSummary({ distanceKm: route.distance / 1000, durationMin: route.duration / 60 });
-        setStatus(tracking ? 'Live journey tracking is on. Route updated from your current location.' : 'Route ready inside Margasiri.');
-      })
-      .catch(() => {
         const straightKm = haversineKm(origin, destination);
-        const sourceData: Feature<LineString> = {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: [[origin.lng, origin.lat], [destination.lng, destination.lat]]
-          }
-        };
-
-        const routeSource = map.getSource('route') as any;
-        if (routeSource) {
-          routeSource.setData(sourceData);
-        } else {
-          map.addSource('route', { type: 'geojson', data: sourceData });
-          map.addLayer({
-            id: 'route-line',
-            type: 'line',
-            source: 'route',
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': '#b23a2f', 'line-width': 4, 'line-dasharray': [2, 2], 'line-opacity': 0.8 }
-          });
-        }
-
         setSummary({ distanceKm: straightKm, durationMin: straightKm * 2 });
-        setStatus('Road route is unavailable right now, showing approximate distance.');
-      });
+        fitJourneyBounds(map, maps, origin, destination);
+        setStatus('Google route is unavailable right now, showing approximate distance.');
+      }
+    );
 
     return () => {
       disposed = true;
     };
-  }, [destination, mapReady, origin, place.lat, place.lng, tracking]);
+  }, [destination, mapReady, origin, tracking]);
 
   function updateLivePosition(position: GeolocationPosition) {
     const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
@@ -263,9 +253,7 @@ export default function DirectionsMap({ place }: { place: Place }) {
       return;
     }
 
-    if (watchIdRef.current != null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
+    if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
 
     setGeoBusy(true);
     setStatus('Starting live journey tracking...');
@@ -296,8 +284,9 @@ export default function DirectionsMap({ place }: { place: Place }) {
 
   function recenterJourney() {
     const map = mapRef.current;
-    if (!map) return;
-    fitJourneyBounds(map, origin, destination);
+    const maps = mapsRef.current;
+    if (!map || !maps) return;
+    fitJourneyBounds(map, maps, origin, destination);
   }
 
   return (
@@ -336,7 +325,7 @@ export default function DirectionsMap({ place }: { place: Place }) {
             <p className="mt-0.5 truncate text-xs opacity-65">{place.district}, {place.state}</p>
           </div>
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-paper-light ${tracking ? 'bg-pine' : 'bg-indigo'}`}>
-            {tracking ? 'Live' : 'MapTiler'}
+            {tracking ? 'Live' : 'Google'}
           </span>
         </div>
 

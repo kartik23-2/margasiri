@@ -2,8 +2,6 @@
 
 India's hidden villages, valleys and heritage sites, sorted by live distance from you. English, Hindi, Kannada.
 
-This is a working Next.js 14 App Router + TypeScript + Tailwind application with Supabase auth/profile wiring, static place data, place browsing maps, and a Prisma schema ready for PostgreSQL/PostGIS.
-
 ## Quick Start
 
 ```bash
@@ -11,118 +9,25 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Home, Explore, Map, Saved, Profile, place detail pages, and state pages all build from the app code.
-
-Map browsing screens also need:
+Map and in-app journey screens need:
 
 ```bash
-NEXT_PUBLIC_MAPTILER_API_KEY="your-maptiler-key"
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="your-google-maps-key"
 ```
-
-By default, Margasiri builds a MapLibre-compatible MapTiler streets style URL from that key. You can still override it with `NEXT_PUBLIC_TILE_PROVIDER_URL` if you want to use Stadia Maps, Geoapify, or your own `tileserver-gl`. Do not use the public `tile.openstreetmap.org` server for a production app.
 
 ## Working Now
 
-- Full Next.js app, builds clean with static pages pre-rendered for SEO.
-- 1237 places in `lib/data/places.ts`.
-- Bottom tab app navigation: Home, Explore, Map, Saved, Profile.
-- Live geolocation and Haversine distance calculation for sorting places by distance.
-- Search and bottom-sheet filters on `/explore`.
-- First-class `/map` tab with clustered pins for all places.
-- Multi-day `/trip` planner with local itinerary storage, day ordering, trip sharing/check-in copy, and rough cost summary.
-- `/saved`, `/profile`, settings, Google sign-in, and email/password auth flows.
-- Profile pictures upload to the Supabase Storage bucket `profile_pictures`; `profiles.image` stores the object path, not an external URL.
-- Map browsing through MapLibre GL JS.
-- Place details use in-app MapTiler directions instead of sending travelers away.
-- Place details include AI-generated utility notes for petrol, ATMs, hospitals, mobile network, public transport, emergency contacts, safety, and typical costs.
-- Place weather planner uses Open-Meteo's no-key forecast endpoint for dates in the next 16 days, then falls back to seasonal travel guidance.
-- Seasonal curated collections are available on `/collections` and feed `/explore?collection=...`.
-- Explore supports browser voice search in English, Hindi, and Kannada where the browser Speech Recognition API is available.
-- A top-bar language switcher persists English, Hindi, and Kannada in local storage and translates the main navigation, Home, Explore, cards, trip controls, profile controls, and place-page utility labels.
-- Place pages show "Places like this" recommendations using category, district, and state similarity.
-- Amenity, transport, and SOS sections include direct Google Maps searches for nearby services.
+- Next.js 14 App Router app with Supabase auth/profile wiring.
+- Place browsing, saved places, profile map, trip planning, weather, utility notes, and multilingual UI.
+- `/map` and `/profile/map` use Google Maps for place pins.
+- `/directions/[slug]` uses Google Maps plus live browser GPS tracking for in-app journeys.
+- Place images resolve to real Wikimedia/Wikipedia photos where available, with generated fallback art only when no photo is found.
 
 ## Directions
 
-Margasiri keeps the directions experience inside the app. Place cards and place detail pages open `/directions/[slug]`, where MapLibre renders a MapTiler map with the destination, current/saved browser location, and a route line.
+Margasiri keeps the directions experience inside the app. Place cards and place detail pages open `/directions/[slug]`, where Google Maps renders the destination, current/saved browser location, and a Google route.
 
-The map style is powered by:
-
-```text
-NEXT_PUBLIC_MAPTILER_API_KEY
-```
-
-If a saved location is already available from Home or Explore, the directions page starts from that point. Otherwise it asks for browser location permission and stores the last known location for future route views.
-
-Routing is drawn inside Margasiri for planning and preview. Travelers should still use local judgment for remote roads, closures, permits, and last-mile conditions.
-
-## Trip Planning And Safety
-
-The first-stage planning layer is intentionally practical:
-
-- Add any place to a local multi-day trip.
-- Reorder stops and assign day numbers.
-- Estimate rough shared cost from route distance, fuel, toll buffer, food, and simple stay assumptions.
-- Share the plan/check-in text with a contact before leaving.
-- Read place-level notes for amenities, public transport, emergency numbers, and remote-area safety.
-
-The amenities and safety notes are generated from the place category, district, and remoteness profile. They are useful planning prompts, not official listings; travelers should reconfirm critical services locally before remote treks, forests, and late returns.
-
-Weather is fetched client-side from Open-Meteo for near-term forecasts. Their forecast API supports coordinates, daily variables, `start_date`/`end_date`, and up to 16 forecast days; outside that window, the app shows seasonal guidance instead.
-
-## Map Browsing
-
-The Map tab and Profile Map are separate from navigation. They use MapLibre GL JS only to show pins and clusters. A managed OpenStreetMap-data tile provider is the recommended default; full tile self-hosting can be revisited later if map browsing traffic grows enough to justify the operational work.
-
-## Connecting Supabase
-
-1. Copy `.env.example` to `.env`.
-2. Set:
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=""
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=""
-   SUPABASE_SERVICE_ROLE_KEY=""
-   ```
-3. Run `supabase/schema.sql` in the Supabase SQL editor to create profile, saved, visited, contribution, and RLS tables.
-4. Create or let the SQL create the private Storage bucket `profile_pictures`; users can upload/read/delete only inside their own user-id folder.
-5. Enable Google in Supabase Auth Providers if using Google sign-in.
-
-## Project Structure
-
-```text
-app/
-  page.tsx                    Home feed
-  explore/page.tsx             Search and filter browsing
-  collections/page.tsx         Seasonal curated collections
-  map/page.tsx                 All-places MapLibre map
-  trip/page.tsx                Multi-day itinerary builder
-  place/[slug]/page.tsx        SEO-ready place details with in-app directions
-  directions/[slug]/page.tsx   MapTiler route preview for each place
-  api/places/route.ts          Static places API, ready to swap to DB
-components/
-  BottomTabBar.tsx             Persistent app navigation
-  AddToTripButton.tsx          Adds a place to local trip storage
-  DirectionsLink.tsx           In-app directions route link
-  DirectionsMap.tsx            MapTiler route preview
-  WeatherPlanner.tsx           Date-based weather panel
-  VoiceSearchButton.tsx        EN/HI/KN browser speech search
-  AllPlacesMap.tsx             Clustered all-places map
-  ProfileMap.tsx               Saved/visited user map
-  PlaceCard.tsx                Reusable destination card
-lib/
-  data/places.ts               Current static data source
-  geo.ts                       Distance and Google Maps URL helpers
-  lastLocation.ts              Last browser location captured by Home/Explore
-  mapLibre.ts                  MapLibre CDN and tile-provider helpers
-  tripPlanning.ts              Generated utility, safety, transport, and cost guidance
-  collections.ts               Seasonal collections and similar-place scoring
-  supabase/                    Supabase clients
-```
-
-## Language Status
-
-- Main app UI now switches between English, Hindi, and Kannada through the top-bar language selector.
-- Place names and long descriptions are still authored in English. The Prisma schema has a `PlaceTranslation` model ready for translated content when full destination-copy translation is added.
+Tap `Start journey` to start live GPS tracking. The app watches your position, updates the current-location marker, refreshes the route from your latest location, and shows distance, estimated time, GPS accuracy, and last update time.
 
 ## Deploying
 
@@ -132,4 +37,4 @@ Deploy to Vercel with:
 vercel deploy --prod
 ```
 
-Set Supabase env vars and `NEXT_PUBLIC_MAPTILER_API_KEY` in Vercel production. Without a MapTiler key or `NEXT_PUBLIC_TILE_PROVIDER_URL`, map browsing screens will show setup messages instead of falling back to public OSM infrastructure.
+Set Supabase env vars and `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in Vercel production. Because this is a browser map key, restrict it in Google Cloud Console to your allowed domains.

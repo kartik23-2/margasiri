@@ -1,126 +1,74 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { FeatureCollection, Point } from 'geojson';
-import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
-import { osmStyleUrl } from '@/lib/mapLibre';
+import { googleMapsApiKey, loadGoogleMaps, missingGoogleMapsMessage } from '@/lib/googleMaps';
 
 export default function AllPlacesMap({ places }: { places: Place[] }) {
   const { tr } = useLanguage();
   const nodeRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
+  const mapRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
   const [status, setStatus] = useState('');
-  const tileStyleUrl = osmStyleUrl();
+  const apiKey = googleMapsApiKey();
 
   useEffect(() => {
-    if (!tileStyleUrl) {
-      setStatus(tr('mapStyleMissing'));
+    if (!apiKey) {
+      setStatus(missingGoogleMapsMessage('this map'));
       return undefined;
     }
 
     let disposed = false;
-    try {
-      if (disposed || !nodeRef.current) return undefined;
-        const map = new maplibregl.Map({
-          container: nodeRef.current,
-          style: tileStyleUrl,
-          center: [78.9629, 22.5937],
-          zoom: 4.2
+
+    loadGoogleMaps()
+      .then((maps) => {
+        if (disposed || !nodeRef.current) return;
+
+        const map = new maps.Map(nodeRef.current, {
+          center: { lat: 22.5937, lng: 78.9629 },
+          zoom: 4.2,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          clickableIcons: false
         });
-        map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
         mapRef.current = map;
 
-        map.on('load', () => {
-          const data: FeatureCollection<Point> = {
-            type: 'FeatureCollection',
-            features: places.map((place) => ({
-              type: 'Feature',
-              properties: {
-                name: place.name,
-                state: place.state,
-                slug: place.slug,
-                category: place.category
-              },
-              geometry: { type: 'Point', coordinates: [place.lng, place.lat] }
-            }))
-          };
-
-          map.addSource('places', {
-            type: 'geojson',
-            data,
-            cluster: true,
-            clusterMaxZoom: 8,
-            clusterRadius: 42
-          });
-
-          map.addLayer({
-            id: 'clusters',
-            type: 'circle',
-            source: 'places',
-            filter: ['has', 'point_count'],
-            paint: {
-              'circle-color': '#1b2a4a',
-              'circle-radius': ['step', ['get', 'point_count'], 18, 50, 24, 150, 32],
-              'circle-stroke-color': '#d9a441',
-              'circle-stroke-width': 2
-            }
-          });
-          map.addLayer({
-            id: 'cluster-count',
-            type: 'symbol',
-            source: 'places',
-            filter: ['has', 'point_count'],
-            layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12 },
-            paint: { 'text-color': '#fdfaf1' }
-          });
-          map.addLayer({
-            id: 'place-points',
-            type: 'circle',
-            source: 'places',
-            filter: ['!', ['has', 'point_count']],
-            paint: {
-              'circle-color': '#b23a2f',
-              'circle-radius': 6,
-              'circle-stroke-color': '#fdfaf1',
-              'circle-stroke-width': 2
+        const info = new maps.InfoWindow();
+        markersRef.current = places.map((place) => {
+          const marker = new maps.Marker({
+            position: { lat: place.lat, lng: place.lng },
+            map,
+            title: place.name,
+            icon: {
+              path: maps.SymbolPath.CIRCLE,
+              scale: 6,
+              fillColor: '#b23a2f',
+              fillOpacity: 1,
+              strokeColor: '#fdfaf1',
+              strokeWeight: 2
             }
           });
 
-          map.on('click', 'clusters', (event: any) => {
-            const features = map.queryRenderedFeatures(event.point, { layers: ['clusters'] });
-            const feature = features[0] as any;
-            const source = map.getSource('places') as any;
-            if (!feature || !source) return;
-            const clusterId = feature.properties.cluster_id;
-            source.getClusterExpansionZoom(clusterId, (err: Error, zoom: number) => {
-              if (err) return;
-              map.easeTo({ center: feature.geometry.coordinates, zoom });
-            });
+          marker.addListener('click', () => {
+            info.setContent(`<strong>${place.name}</strong><br/><span>${place.state}</span><br/><a href="/place/${place.slug}">${tr('openDetails')}</a>`);
+            info.open({ map, anchor: marker });
           });
 
-          map.on('click', 'place-points', (event: any) => {
-            const feature = event.features?.[0];
-            if (!feature) return;
-            const props = feature.properties;
-            new maplibregl.Popup()
-              .setLngLat(feature.geometry.coordinates)
-              .setHTML(`<strong>${props.name}</strong><br/><span>${props.state}</span><br/><a href="/place/${props.slug}">${tr('openDetails')}</a>`)
-              .addTo(map);
-          });
-
-          setStatus(`${places.length} ${tr('placesOnMap')}`);
+          return marker;
         });
-    } catch {
-      setStatus(tr('mapLoadFailed'));
-    }
+
+        setStatus(`${places.length} ${tr('placesOnMap')}`);
+      })
+      .catch(() => setStatus('Could not load Google Maps.'));
 
     return () => {
       disposed = true;
-      mapRef.current?.remove();
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current = [];
     };
-  }, [places, tileStyleUrl, tr]);
+  }, [apiKey, places, tr]);
 
   return (
     <div className="relative h-[calc(100vh-145px)] min-h-[560px] overflow-hidden bg-indigo">

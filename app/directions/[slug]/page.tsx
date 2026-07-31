@@ -11,7 +11,7 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   if (!place) return {};
   return {
     title: `Directions to ${place.name} | Margasiri`,
-    description: `MapTiler-powered in-app directions to ${place.name}, ${place.district}, ${place.state}.`
+    description: `Google Maps-powered in-app directions to ${place.name}, ${place.district}, ${place.state}.`
   };
 }
 

@@ -1,62 +1,74 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl';
 import { useLanguage } from '@/components/LanguageProvider';
 import type { Place } from '@/lib/data/places';
-import { osmStyleUrl } from '@/lib/mapLibre';
+import { googleMapsApiKey, loadGoogleMaps, missingGoogleMapsMessage } from '@/lib/googleMaps';
 
 export default function ProfileMap({ saved, visited }: { saved: Place[]; visited: Place[] }) {
   const { tr } = useLanguage();
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
+  const markersRef = useRef<any[]>([]);
   const [status, setStatus] = useState('');
-  const tileStyleUrl = osmStyleUrl();
+  const apiKey = googleMapsApiKey();
 
   useEffect(() => {
-    if (!tileStyleUrl) {
-      setStatus(tr('mapStyleMissing'));
+    if (!apiKey) {
+      setStatus(missingGoogleMapsMessage('your profile map'));
       return undefined;
     }
 
     let disposed = false;
-    try {
-      if (disposed || !mapNodeRef.current) return;
 
-      const all = [...saved, ...visited];
-      const center: [number, number] = all[0] ? [all[0].lng, all[0].lat] : [78.9629, 22.5937];
-      const map = new maplibregl.Map({
-        container: mapNodeRef.current,
-        style: tileStyleUrl,
-        center,
-        zoom: all.length ? 6 : 4
-      });
-      map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-      mapRef.current = map;
+    loadGoogleMaps()
+      .then((maps) => {
+        if (disposed || !mapNodeRef.current) return;
 
-      map.on('load', () => {
-        const addPin = (place: Place, kind: 'saved' | 'visited') => {
-          const el = document.createElement('div');
-          el.className = `h-5 w-5 rounded-full border-[3px] border-paper-light shadow-lg ${kind === 'saved' ? 'bg-vermillion' : 'bg-pine'}`;
-          new maplibregl.Marker({ element: el })
-            .setLngLat([place.lng, place.lat])
-            .setPopup(new maplibregl.Popup().setHTML(`<strong>${place.name}</strong><br/><a href="/place/${place.slug}">${tr('openDetails')}</a>`))
-            .addTo(map);
-        };
+        const all = [...saved, ...visited];
+        const center = all[0] ? { lat: all[0].lat, lng: all[0].lng } : { lat: 22.5937, lng: 78.9629 };
+        const map = new maps.Map(mapNodeRef.current, {
+          center,
+          zoom: all.length ? 6 : 4,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false
+        });
 
-        saved.forEach((place) => addPin(place, 'saved'));
-        visited.forEach((place) => addPin(place, 'visited'));
+        const info = new maps.InfoWindow();
+        markersRef.current = all.map((place) => {
+          const kind = saved.some((savedPlace) => savedPlace.slug === place.slug) ? 'saved' : 'visited';
+          const marker = new maps.Marker({
+            position: { lat: place.lat, lng: place.lng },
+            map,
+            title: place.name,
+            icon: {
+              path: maps.SymbolPath.CIRCLE,
+              scale: 7,
+              fillColor: kind === 'saved' ? '#b23a2f' : '#2f6f4f',
+              fillOpacity: 1,
+              strokeColor: '#fdfaf1',
+              strokeWeight: 3
+            }
+          });
+
+          marker.addListener('click', () => {
+            info.setContent(`<strong>${place.name}</strong><br/><a href="/place/${place.slug}">${tr('openDetails')}</a>`);
+            info.open({ map, anchor: marker });
+          });
+
+          return marker;
+        });
+
         setStatus(all.length ? tr('profileMapPinned') : tr('profileMapEmpty'));
-      });
-    } catch {
-      setStatus(tr('mapLoadFailed'));
-    }
+      })
+      .catch(() => setStatus('Could not load Google Maps.'));
 
     return () => {
       disposed = true;
-      mapRef.current?.remove();
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current = [];
     };
-  }, [saved, tileStyleUrl, tr, visited]);
+  }, [apiKey, saved, tr, visited]);
 
   return (
     <div className="relative h-[calc(100vh-65px)] bg-indigo">

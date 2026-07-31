@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import AppShell from '@/components/AppShell';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import './globals.css';
 
 export const metadata: Metadata = {
