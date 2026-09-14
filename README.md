@@ -4,7 +4,7 @@ India's hidden villages, valleys and heritage sites, sorted by live distance fro
 
 ## Quick Start
 
-```bash...
+```bash
 npm install
 npm run dev
 ```
